@@ -4,9 +4,20 @@
 
 package frc.robot;
 
+import java.lang.reflect.Field;
+
+import edu.wpi.first.cameraserver.CameraServer;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.networktables.NetworkTableEntry;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import frc.robot.subsystems.Superstructure;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 
 /**
  * The methods in this class are called automatically corresponding to each
@@ -20,6 +31,16 @@ public class Robot extends TimedRobot {
 
   private final RobotContainer m_robotContainer;
 
+  NetworkTableEntry xEntry = NetworkTableInstance.getDefault()
+      .getTable("Pose/InitialPose").getEntry("X");
+  NetworkTableEntry yEntry = NetworkTableInstance.getDefault()
+      .getTable("Pose/InitialPose").getEntry("Y");
+  NetworkTableEntry rotEntry = NetworkTableInstance.getDefault()
+      .getTable("Pose/InitialPose").getEntry("Rotation");
+
+  private final SendableChooser<Pose2d> intialPosePicker = new SendableChooser<>();
+  private Pose2d lastPose2d;
+
   /**
    * This function is run when the robot is first started up and should be used
    * for any
@@ -30,10 +51,31 @@ public class Robot extends TimedRobot {
     // and put our
     // autonomous chooser on the dashboard.
     m_robotContainer = new RobotContainer();
+
+    poseIntialization();
+  }
+
+  private void poseIntialization() {
+    // we will default to the center
+    intialPosePicker.setDefaultOption("Center Blue", FieldConstants.centerStartBlue);
+    lastPose2d = FieldConstants.centerStartBlue;
+    intialPosePicker.addOption("Left Blue", FieldConstants.leftStartBlue);
+    intialPosePicker.addOption("Right Blue", FieldConstants.rightStartBlue);
+    intialPosePicker.addOption("Center Red", FieldConstants.centerStartRed);
+    intialPosePicker.addOption("Left Red", FieldConstants.leftStartRed);
+    intialPosePicker.addOption("Right Red", FieldConstants.rightStartRed);
+
+    xEntry.setDouble(FieldConstants.centerStartBlue.getX());
+    yEntry.setDouble(FieldConstants.centerStartBlue.getY());
+    rotEntry.setDouble(FieldConstants.centerStartBlue.getRotation().getDegrees());
+
+    SmartDashboard.putData("Intial position picker", intialPosePicker);
   }
 
   @Override
-  public void robotInit() {}
+  public void robotInit() {
+    CameraServer.startAutomaticCapture();
+  }
 
   /**
    * This function is called every 20 ms, no matter the mode. Use this for items
@@ -55,7 +97,22 @@ public class Robot extends TimedRobot {
     // robot's periodic
     // block in order for anything in the Command-based framework to work.
     CommandScheduler.getInstance().run();
+    SmartDashboard.putNumber("Match Timer", (int) DriverStation.getMatchTime());
 
+    if (DriverStation.isDisabled()) {
+      if (!lastPose2d.equals(intialPosePicker.getSelected())) {
+        // pick changed
+        var p = intialPosePicker.getSelected();
+        if (p != null) {
+          xEntry.setDouble(p.getX());
+          yEntry.setDouble(p.getY());
+          rotEntry.setDouble(p.getRotation().getDegrees());
+        }
+        lastPose2d = intialPosePicker.getSelected();
+      }
+      Superstructure.getInstance().getDrivebase().setIntialPose(new Pose2d(xEntry.getDouble(kDefaultPeriod),
+          yEntry.getDouble(kDefaultPeriod), new Rotation2d(Math.toRadians(rotEntry.getDouble(kDefaultPeriod)))));
+    }
   }
 
   /** This function is called once each time the robot enters Disabled mode. */

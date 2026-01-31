@@ -187,6 +187,10 @@ public class SwerveSubsystem extends SubsystemBase {
         return true;
     }
 
+    public void setIntialPose(Pose2d position) {
+        swerveDrive.addVisionMeasurement(position, Timer.getFPGATimestamp());
+    }
+
     /**
      * Setup AutoBuilder for PathPlanner.
      */
@@ -569,6 +573,8 @@ public void driveWhileAiming(ChassisSpeeds velocity, Pose2d target) {
         swerveDrive.driveFieldOriented(new ChassisSpeeds(0, 0, 0));
         return;
     }
+
+    
 
     Rotation2d angleToTarget = toTarget.getAngle();
     Translation2d toTargetDir = toTarget.div(distance);
