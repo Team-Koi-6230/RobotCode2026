@@ -14,6 +14,7 @@ import frc.robot.utils.RumbleSubsystem;
 import swervelib.SwerveInputStream;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.RunCommand;
@@ -58,11 +59,7 @@ public class RobotContainer {
     hoodSubsystem = superstructure.getHoodSubsystem();
     drivebase = superstructure.getDrivebase();
 
-    autonChooser.setDefaultOption("get off the line", new RunCommand(() -> {
-      drivebase.zeroGyro();
-      drivebase.drive(new ChassisSpeeds(1, 0, 0));
-
-    }, drivebase).withTimeout(4));
+    setupAutons();
 
     // Input streams
     driveAngularVelocity = SwerveInputStream.of(drivebase.getSwerveDrive(),
@@ -79,6 +76,16 @@ public class RobotContainer {
         .headingWhile(true);
 
     configureBindings();
+  }
+
+  private void setupAutons() {
+    autonChooser.setDefaultOption("get off the line", new RunCommand(() -> {
+      drivebase.zeroGyro();
+      drivebase.drive(new ChassisSpeeds(1, 0, 0));
+
+    }, drivebase).withTimeout(4));
+
+    SmartDashboard.putData("Auton/Auton Chooser", autonChooser);
   }
 
   private void configureBindings() {
@@ -99,5 +106,6 @@ public class RobotContainer {
 
   public Command getAutonomousCommand() {
     return autonChooser.getSelected();
+    
   }
 }
