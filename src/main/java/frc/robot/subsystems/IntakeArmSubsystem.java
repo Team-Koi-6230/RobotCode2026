@@ -126,6 +126,10 @@ public class IntakeArmSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
+        if (currentWantedState!=null){
+          handleWantedState();
+        }
+
         m_controller.setSetpoint(this.targetAngle, ControlType.kPosition);
 
         if (Double.isNaN(this.targetAngle)) {
@@ -141,12 +145,54 @@ public class IntakeArmSubsystem extends SubsystemBase {
         }
     }
 
+    private void handleWantedState() {
+        switch (currentWantedState) {
+            case IDLE:
+            case HOME:
+            case PREPARING_SHOOTER:
+            case L1_CLIMB:
+            case L3_CLIMB:
+                CloseArm();
+                break;
+            case INTAKING:
+                OpenArm();
+                break;
+            case SHOOTING:
+                handleArmShake();    
+                break;
+        }
+    }    
+
+    private void handleArmShake(){
+        
+        if (state == IntakeArmState.SHAKE_MAX || state == IntakeArmState.OPEN) {
+            setAngle(IntakeArmConstants.kShakeMin);
+        }
+
+        if (state == IntakeArmState.SHAKE_MIN || state == IntakeArmState.CLOSED) {
+            setAngle(IntakeArmConstants.kShakeMax);
+        }
+    }
+
     @Override
     public void simulationPeriodic() {
     }
 
     public boolean isReady() {
-        return false; // Make me ready!
+         switch (currentWantedState) {
+            case IDLE:
+            case HOME:
+            case PREPARING_SHOOTER:
+            case L1_CLIMB:
+            case L3_CLIMB:
+                return state==IntakeArmState.CLOSED;
+            case INTAKING:
+                return state==IntakeArmState.OPEN;
+            case SHOOTING:
+                return state==IntakeArmState.OPEN || state==IntakeArmState.CLOSED;
+
+        }
+        return false;
     }
 
     public void setWantedState(WantedState wantedState) {
