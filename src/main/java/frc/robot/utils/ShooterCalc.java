@@ -6,63 +6,99 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.wpilibj.Timer;
 import frc.robot.Constants;
 import frc.robot.FieldConstants;
 import frc.robot.subsystems.Superstructure;
 
-public class ShooterCalc {
-    private static final InterpolatingDoubleTreeMap shotHoodAngleMap = Constants.ShooterConstants.kShotHoodAngleMap;
-    private static final InterpolatingDoubleTreeMap shotFlywheelSpeedMap = Constants.ShooterConstants.kShotFlywheelSpeedMap;
-    private static final InterpolatingDoubleTreeMap timeOfFlightMap = Constants.ShooterConstants.kTimeOfFlightMap;
+public final class ShooterCalc {
 
-    private static final LinearFilter hoodFilter = LinearFilter.movingAverage((int) (0.1 / Constants.loopPeriodSecs));
-    private static final LinearFilter xFilter = LinearFilter.singlePoleIIR(0.1, 0.02);
-    private static final LinearFilter yFilter = LinearFilter.singlePoleIIR(0.1, 0.02);
+    private static final InterpolatingDoubleTreeMap hoodMap =
+            Constants.ShooterConstants.kShotHoodAngleMap;
+    private static final InterpolatingDoubleTreeMap flywheelMap =
+            Constants.ShooterConstants.kShotFlywheelSpeedMap;
+    private static final InterpolatingDoubleTreeMap tofMap =
+            Constants.ShooterConstants.kTimeOfFlightMap;
+
+    private static final LinearFilter hoodFilter =
+            LinearFilter.movingAverage((int) (0.1 / Constants.loopPeriodSecs));
+    private static final LinearFilter xFilter =
+            LinearFilter.singlePoleIIR(0.1, 0.02);
+    private static final LinearFilter yFilter =
+            LinearFilter.singlePoleIIR(0.1, 0.02);
+
+    private static final Translation2d HUB_POS =
+            FieldConstants.Hub.innerCenterPoint.toTranslation2d();
+    private static final Pose2d ZERO_POSE = new Pose2d();
+
+    /** Cached result */
+    private static ShootingParameters cachedParams =
+            new ShootingParameters(false, 0.0, 0.0, ZERO_POSE);
+
+    /** Ensures we only compute once per loop */
+    private static double lastTimestamp = -1.0;
 
     public record ShootingParameters(
             boolean isValid,
             double hoodAngle,
             double flywheelSpeed,
-            Pose2d target) {
-    }
+            Pose2d target
+    ) {}
 
-    public static ShootingParameters getParameters() {
-        var swerve = Superstructure.getInstance().getDrivebase();
-        Pose2d robotPose = swerve.getPose();
-        Translation2d hubPos = FieldConstants.Hub.innerCenterPoint.toTranslation2d();
+    /** Call ONCE per robot loop (periodic / superstructure update) */
+    public static void update() {
+        double now = Timer.getFPGATimestamp();
+        if (now == lastTimestamp) {
+            return; // already computed this loop
+        }
+        lastTimestamp = now;
 
-        double distance = robotPose.getTranslation().getDistance(hubPos);
+        var drive = Superstructure.getInstance().getDrivebase();
+        Pose2d robotPose = drive.getPose();
 
-        // Guard Clause
-        if (distance < 0 || distance > Constants.ShooterConstants.kMaxShootingDist) {
-            return new ShootingParameters(false, 0.0, 0.0, new Pose2d());
+        Translation2d robotTranslation = robotPose.getTranslation();
+        double distance = robotTranslation.getDistance(HUB_POS);
+
+        // Hard guard: do NOTHING if we can't shoot
+        if (distance <= 0.0 ||
+            distance > Constants.ShooterConstants.kMaxShootingDist) {
+
+            cachedParams =
+                    new ShootingParameters(false, 0.0, 0.0, ZERO_POSE);
+            return;
         }
 
-        double timeOfFlight = timeOfFlightMap.get(distance);
+        double timeOfFlight = tofMap.get(distance);
 
-        ChassisSpeeds fieldSpeeds = swerve.getFieldVelocity();
+        ChassisSpeeds speeds = drive.getFieldVelocity();
 
-        // We smooth the X and Y components individually to remove sensor noise
-        double smoothVx = xFilter.calculate(fieldSpeeds.vxMetersPerSecond);
-        double smoothVy = yFilter.calculate(fieldSpeeds.vyMetersPerSecond);
+        double smoothVx = xFilter.calculate(speeds.vxMetersPerSecond);
+        double smoothVy = yFilter.calculate(speeds.vyMetersPerSecond);
 
-        Translation2d smoothedVelocity = new Translation2d(smoothVx, smoothVy);
+        // Inline math = fewer objects
+        Translation2d virtualTarget = new Translation2d(
+                HUB_POS.getX() - smoothVx * timeOfFlight,
+                HUB_POS.getY() - smoothVy * timeOfFlight
+        );
 
-        // Virtual Target = Hub - (Velocity * Time)
-        Translation2d leadOffset = smoothedVelocity.times(timeOfFlight);
-        Translation2d virtualTarget = hubPos.minus(leadOffset);
+        double leadDistance = robotTranslation.getDistance(virtualTarget);
 
-        // 5. Final Calculations
-        double leadDistance = robotPose.getTranslation().getDistance(virtualTarget);
+        double hoodAngle =
+                hoodFilter.calculate(hoodMap.get(leadDistance));
+        double flywheelSpeed =
+                flywheelMap.get(leadDistance);
 
-        double hoodAngle = hoodFilter.calculate(shotHoodAngleMap.get(leadDistance));
-        double flywheelSpeed = shotFlywheelSpeedMap.get(leadDistance);
-
-        return new ShootingParameters(
+        cachedParams = new ShootingParameters(
                 true,
                 hoodAngle,
                 flywheelSpeed,
-                new Pose2d(virtualTarget, new Rotation2d()));
+                new Pose2d(virtualTarget, Rotation2d.kZero)
+        );
+    }
+
+    /** Zero-cost getter */
+    public static ShootingParameters getParameters() {
+        return cachedParams;
     }
 
     public static void resetHoodFilter() {

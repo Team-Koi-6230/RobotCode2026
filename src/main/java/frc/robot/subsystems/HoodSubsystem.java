@@ -9,6 +9,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class HoodSubsystem extends SubsystemBase {
+
     public enum HoodState {
         AT_TARGET,
         AT_STARTING_POS,
@@ -16,54 +17,65 @@ public class HoodSubsystem extends SubsystemBase {
     }
 
     private final Servo servoRight, servoLeft;
-    private double targetAngle = Double.NaN; // current goal
-    private HoodState state = HoodState.AT_STARTING_POS;
 
-    private WantedState currentWantedState;
+    private double targetAngle = Double.NaN;
+    private double lastSetTime = 0.0;
+
+    private HoodState state = HoodState.AT_STARTING_POS;
+    private WantedState currentWantedState = WantedState.IDLE;
 
     public HoodSubsystem() {
         servoRight = new Servo(Constants.HoodConstants.kServoRightID);
         servoLeft = new Servo(Constants.HoodConstants.kServoLeftID);
 
-        // Start at initial position
+        // Start at home
         setAngle(Constants.HoodConstants.kStartingPos);
     }
 
     public void setAngle(double degrees) {
-        degrees = MathUtil.clamp(degrees, Constants.HoodConstants.kMinDeg, Constants.HoodConstants.kMaxDeg);
+        degrees = MathUtil.clamp(
+                degrees,
+                Constants.HoodConstants.kMinDeg,
+                Constants.HoodConstants.kMaxDeg
+        );
 
-        double normalized = (degrees - Constants.HoodConstants.kMinDeg)
-                / (Constants.HoodConstants.kMaxDeg - Constants.HoodConstants.kMinDeg);
+        if (Double.compare(degrees, targetAngle) == 0) {
+            return;
+        }
 
-        double leftPwm = Constants.HoodConstants.kServoMin
-                + normalized * (Constants.HoodConstants.kServoMax - Constants.HoodConstants.kServoMin);
+        double normalized =
+                (degrees - Constants.HoodConstants.kMinDeg) /
+                (Constants.HoodConstants.kMaxDeg - Constants.HoodConstants.kMinDeg);
 
-        double rightPwm = Constants.HoodConstants.kServoMin
-                + (1.0 - normalized) * (Constants.HoodConstants.kServoMax - Constants.HoodConstants.kServoMin);
+        double leftPwm =
+                Constants.HoodConstants.kServoMin +
+                normalized * (Constants.HoodConstants.kServoMax - Constants.HoodConstants.kServoMin);
 
-        servoRight.set(rightPwm);
+        double rightPwm =
+                Constants.HoodConstants.kServoMin +
+                (1.0 - normalized) * (Constants.HoodConstants.kServoMax - Constants.HoodConstants.kServoMin);
+
         servoLeft.set(leftPwm);
+        servoRight.set(rightPwm);
 
-        // Update target and state
         targetAngle = degrees;
+        lastSetTime = Timer.getFPGATimestamp();
         state = HoodState.MOVING;
-
-        Timer.delay(Constants.HoodConstants.kServoDelay);
-
-        state = degrees == Constants.HoodConstants.kStartingPos ? HoodState.AT_STARTING_POS : HoodState.AT_TARGET;
     }
 
-    /** Returns current hood state (AT_TARGET or MOVING) */
-    public HoodState getState() {
-        return state;
-    }
-
-    /** Command wrapper to set hood angle once */
+    /** Command wrapper */
     public Command setHoodAngleCommand(double angle) {
         return runOnce(() -> setAngle(angle));
     }
 
-    /** Returns the current target angle */
+    public HoodState getState() {
+        return state;
+    }
+
+    public boolean isReady() {
+        return state == HoodState.AT_TARGET;
+    }
+
     public double getTargetAngle() {
         return targetAngle;
     }
@@ -72,31 +84,15 @@ public class HoodSubsystem extends SubsystemBase {
         setAngle(Constants.HoodConstants.kStartingPos);
     }
 
-    private void handleWantedState() {
-        switch (currentWantedState) {
-            case IDLE:
-            case HOME:
-            case INTAKING:
-            case L1_CLIMB:
-            case L3_CLIMB:
-                resetPosition();
-                break;
-            case PREPARING_SHOOTER:
-            case SHOOTING:
-                prepareHood();
-                break;
-        }
-    }
-
-    public boolean isReady() {
-        return state == HoodState.AT_TARGET;
-    }
-
     private void prepareHood() {
         if (Vision.getInstance().isInAllianceZone()) {
             setAngle(Constants.HoodConstants.kAllianceAngle);
         } else {
-            setAngle(Superstructure.getInstance().getShooterParameters().hoodAngle());
+            setAngle(
+                Superstructure.getInstance()
+                    .getShooterParameters()
+                    .hoodAngle()
+            );
         }
     }
 
@@ -106,8 +102,28 @@ public class HoodSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
-        if (currentWantedState != null) {
-            handleWantedState();
+        if (state == HoodState.MOVING) {
+            if (Timer.getFPGATimestamp() - lastSetTime
+                    >= Constants.HoodConstants.kServoDelay) {
+
+                state = targetAngle == Constants.HoodConstants.kStartingPos
+                        ? HoodState.AT_STARTING_POS
+                        : HoodState.AT_TARGET;
+            }
+        }
+        switch (currentWantedState) {
+            case IDLE:
+            case HOME:
+            case INTAKING:
+            case L1_CLIMB:
+            case L3_CLIMB:
+                resetPosition();
+                break;
+
+            case PREPARING_SHOOTER:
+            case SHOOTING:
+                prepareHood();
+                break;
         }
     }
 }

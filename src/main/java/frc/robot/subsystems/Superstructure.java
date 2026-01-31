@@ -84,6 +84,8 @@ public class Superstructure extends SubsystemBase {
                 new File(
                         Filesystem.getDeployDirectory(),
                         RobotBase.isSimulation() ? "swerve-sim" : "swerve"));
+
+        SmartDashboard.putData("superstructure/Aiming/Field", field);
     }
 
     /* ================= PERIODIC ================= */
@@ -96,6 +98,7 @@ public class Superstructure extends SubsystemBase {
         }
 
         if (wantedState == WantedState.SHOOTING || wantedState == WantedState.PREPARING_SHOOTER) {
+            ShooterCalc.update();
             currentShootingParameters = ShooterCalc.getParameters();
             field.getObject("target").setPose(currentShootingParameters.target());
         }
@@ -105,7 +108,6 @@ public class Superstructure extends SubsystemBase {
         SmartDashboard.putString("superstructure/Wanted superstate", wantedState.name());
         SmartDashboard.putString("superstructure/superstate", currentState.name());
         field.setRobotPose(drivebase.getPose());
-        SmartDashboard.putData("superstructure/Aiming/Field", field);
     }
 
     /* ================= STATE FLOW ================= */
@@ -121,23 +123,20 @@ public class Superstructure extends SubsystemBase {
     }
 
     private void updateCurrentState() {
-    boolean allReady =
-            shooterSubsystem.isReady() &&
-            hoodSubsystem.isReady() &&
-            intakeArmSubsystem.isReady() &&
-            intakeRollerSubsystem.isReady() &&
-            feederSubsystem.isReady() &&
-            climberSubsystem.isReady() &&
-            drivebase.isReady();
+        boolean allReady = shooterSubsystem.isReady() &&
+                hoodSubsystem.isReady() &&
+                intakeArmSubsystem.isReady() &&
+                intakeRollerSubsystem.isReady() &&
+                feederSubsystem.isReady() &&
+                climberSubsystem.isReady() &&
+                drivebase.isReady();
 
-
-    if (allReady) {
-        currentState = CurrentState.valueOf(wantedState.name());
-    } else {
-        currentState = CurrentState.IDLE;
+        if (allReady) {
+            currentState = CurrentState.valueOf(wantedState.name());
+        } else {
+            currentState = CurrentState.IDLE;
+        }
     }
-}
-
 
     public void setWantedState(WantedState state) {
         wantedState = state;
