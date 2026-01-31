@@ -5,6 +5,9 @@ import frc.robot.subsystems.Superstructure;
 import frc.robot.subsystems.SwerveSubsystem;
 import frc.robot.utils.RumbleSubsystem;
 import swervelib.SwerveInputStream;
+
+import com.pathplanner.lib.auto.NamedCommands;
+
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -53,17 +56,25 @@ public class RobotContainer {
   }
 
   private void setupAutons() {
+    setupAutonCommands();
     autonChooser.setDefaultOption("get off the line", new RunCommand(() -> {
       drivebase.zeroGyro();
       drivebase.drive(new ChassisSpeeds(1, 0, 0));
 
     }, drivebase).withTimeout(4));
 
-    System.out.println(FieldConstants.leftStartBlue.getX() + " | " + FieldConstants.leftStartBlue.getX());
-
-    //autonChooser.addOption("Depot intake + shoot", drivebase.getAutonomousCommand("DepotIntake.path"));
+    autonChooser.addOption("Depo tIntake Climb", drivebase.getAutonomousCommand("DepotIntakeClimb"));
 
     SmartDashboard.putData("Auton/Auton Chooser", autonChooser);
+  }
+
+  private void setupAutonCommands() {
+    NamedCommands.registerCommand("Intake", superstructure.setINTAKINGstate());
+    NamedCommands.registerCommand("Prepare shooting", superstructure.setPREPARING_SHOOTERstate());
+    NamedCommands.registerCommand("Shoot", superstructure.setSHOOTINGstate());
+    NamedCommands.registerCommand("L1 Climb", superstructure.setL1_CLIMBstate());
+    NamedCommands.registerCommand("Idle", superstructure.setIDLEstate());
+    NamedCommands.registerCommand("Home", superstructure.setHOMEstate());
   }
 
   private void configureBindings() {
