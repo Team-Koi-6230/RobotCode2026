@@ -158,17 +158,41 @@ public class IntakeArmSubsystem extends SubsystemBase {
                 OpenArm();
                 break;
             case SHOOTING:
-                // doing nothing to avoid conflict because the thugshaker command is likely working at this state.
+                handleArmShake();    
                 break;
         }
     }    
+
+    private void handleArmShake(){
+        
+        if (state == IntakeArmState.SHAKE_MAX || state == IntakeArmState.OPEN) {
+            setAngle(IntakeArmConstants.kShakeMin);
+        }
+
+        if (state == IntakeArmState.SHAKE_MIN || state == IntakeArmState.CLOSED) {
+            setAngle(IntakeArmConstants.kShakeMax);
+        }
+    }
 
     @Override
     public void simulationPeriodic() {
     }
 
     public boolean isReady() {
-        return state == IntakeArmState.OPEN;
+         switch (currentWantedState) {
+            case IDLE:
+            case HOME:
+            case PREPARING_SHOOTER:
+            case L1_CLIMB:
+            case L3_CLIMB:
+                return state==IntakeArmState.CLOSED;
+            case INTAKING:
+                return state==IntakeArmState.OPEN;
+            case SHOOTING:
+                return state==IntakeArmState.OPEN || state==IntakeArmState.CLOSED;
+
+        }
+        return false;
     }
 
     public void setWantedState(WantedState wantedState) {
