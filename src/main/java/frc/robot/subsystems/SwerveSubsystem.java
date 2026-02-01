@@ -510,7 +510,10 @@ public class SwerveSubsystem extends SubsystemBase {
 
     public void driveBasedOnState(ChassisSpeeds velocity) {
         state = SwerveState.TELEOP;
-       
+        if (Superstructure.getInstance().isManualMode()) {
+            swerveDrive.driveFieldOriented(velocity);
+            return;
+        }
         if (wantedState == WantedState.PREPARING_SHOOTER || wantedState == WantedState.SHOOTING) {
             if (!vision.isInAllianceZone()) {
                 swerveDrive.driveFieldOriented(velocity);

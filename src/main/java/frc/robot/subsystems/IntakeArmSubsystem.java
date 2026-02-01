@@ -110,7 +110,7 @@ public class IntakeArmSubsystem extends SubsystemBase {
     // returns true if the arm is in the minimum shaking angle
     private boolean isAtShakeMin() {
         return Math.abs(IntakeArmConstants.kShakeMin - getAngle()) < IntakeArmConstants.kTolerance;
-    } 
+    }
 
     public void OpenArm() {
         setAngle(IntakeArmConstants.kOpenAngle);
@@ -126,8 +126,8 @@ public class IntakeArmSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
-        if (currentWantedState!=null){
-          handleWantedState();
+        if (currentWantedState != null || Superstructure.getInstance().isSuperstateMode()) {
+            handleWantedState();
         }
 
         m_controller.setSetpoint(this.targetAngle, ControlType.kPosition);
@@ -158,13 +158,13 @@ public class IntakeArmSubsystem extends SubsystemBase {
                 OpenArm();
                 break;
             case SHOOTING:
-                handleArmShake();    
+                handleArmShake();
                 break;
         }
-    }    
+    }
 
-    private void handleArmShake(){
-        
+    private void handleArmShake() {
+
         if (state == IntakeArmState.SHAKE_MAX || state == IntakeArmState.OPEN) {
             setAngle(IntakeArmConstants.kShakeMin);
         }
@@ -179,17 +179,17 @@ public class IntakeArmSubsystem extends SubsystemBase {
     }
 
     public boolean isReady() {
-         switch (currentWantedState) {
+        switch (currentWantedState) {
             case IDLE:
             case HOME:
             case PREPARING_SHOOTER:
             case L1_CLIMB:
             case L3_CLIMB:
-                return state==IntakeArmState.CLOSED;
+                return state == IntakeArmState.CLOSED;
             case INTAKING:
-                return state==IntakeArmState.OPEN;
+                return state == IntakeArmState.OPEN;
             case SHOOTING:
-                return state==IntakeArmState.OPEN || state==IntakeArmState.CLOSED;
+                return state == IntakeArmState.OPEN || state == IntakeArmState.CLOSED;
 
         }
         return false;

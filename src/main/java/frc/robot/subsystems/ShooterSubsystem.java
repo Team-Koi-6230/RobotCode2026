@@ -66,7 +66,7 @@ public class ShooterSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
-        handleWantedState();
+        if (Superstructure.getInstance().isSuperstateMode()) handleWantedState();
 
         if (!Double.isNaN(targetRPM)) {
             handleShootingTarget();

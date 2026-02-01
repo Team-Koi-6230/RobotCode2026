@@ -40,6 +40,7 @@ public class IntakeRollerSubsytem extends SubsystemBase {
 
     @Override
     public void periodic() {
+        if (Superstructure.getInstance().isManualMode()) return;
         if (currentWantedState == WantedState.INTAKING) {
             setVoltage(Constants.IntakeRollerConstants.kIntakePower);
         }

@@ -6,6 +6,8 @@ import frc.robot.subsystems.SwerveSubsystem;
 import frc.robot.utils.RumbleSubsystem;
 import swervelib.SwerveInputStream;
 
+import java.util.function.BooleanSupplier;
+
 import com.pathplanner.lib.auto.NamedCommands;
 
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -78,25 +80,44 @@ public class RobotContainer {
   }
 
   private void configureBindings() {
+    BooleanSupplier isSuperstate = () -> superstructure.isSuperstateMode();
+    BooleanSupplier isManualMode = () -> superstructure.isManualMode();
+
     rumbleSubsystem.setControllers(m_driverController, m_operatorController);
 
     Command driveFieldOrientedAngularVelocity = drivebase.driveFieldOriented(driveAngularVelocity);
     drivebase.setDefaultCommand(driveFieldOrientedAngularVelocity);
+    superstructure.setDefaultCommand(superstructure.setIDLEstate());
 
-    m_driverController.rightBumper().onTrue(
-        superstructure.setPREPARING_SHOOTERstate());
+    m_driverController.a()
+        .onTrue(Commands.runOnce(drivebase::zeroGyro));
 
-    m_driverController.rightBumper().onFalse(
-        superstructure.setIDLEstate());
+    m_driverController.rightBumper()
+        .and(isSuperstate)
+        .whileTrue(superstructure.setPREPARING_SHOOTERstate());
 
-    m_driverController.a().onTrue(
-        Commands.runOnce(drivebase::zeroGyro));
+    m_driverController.rightTrigger()
+        .and(isSuperstate)
+        .whileTrue(superstructure.setSHOOTINGstate());
 
-    //Commands.
+    m_driverController.leftTrigger()
+        .and(isSuperstate)
+        .whileTrue(superstructure.setINTAKINGstate());
+
+    m_driverController.b()
+        .and(isSuperstate)
+        .whileTrue(superstructure.setL3_CLIMBstate());
+
+    m_driverController.x()
+        .and(isSuperstate)
+        .whileTrue(superstructure.setHOMEstate());
+
+    m_driverController.povLeft()
+        .onTrue(superstructure.toggleControlState());
   }
 
   public Command getAutonomousCommand() {
     return autonChooser.getSelected();
-    
+
   }
 }

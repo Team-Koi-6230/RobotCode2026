@@ -52,6 +52,13 @@ public class Superstructure extends SubsystemBase {
         L3_CLIMB
     }
 
+    public enum RobotControlState {
+        SUPERSTATE,
+        MANUAL_MODE
+    }
+
+    private RobotControlState currentRobotControlState = RobotControlState.SUPERSTATE;
+
     private WantedState wantedState = WantedState.IDLE;
     private WantedState previousWantedState = WantedState.IDLE;
     private CurrentState currentState = CurrentState.IDLE;
@@ -61,6 +68,7 @@ public class Superstructure extends SubsystemBase {
     /* ================= SUBSYSTEMS ================= */
 
     private final RumbleSubsystem rumbleSubsystem;
+    @SuppressWarnings("unused")
     private final GameDataSubsystem gameDataSubsystem;
     private final ShooterSubsystem shooterSubsystem;
     private final FeederSubsystem feederSubsystem;
@@ -114,6 +122,7 @@ public class Superstructure extends SubsystemBase {
     /* ================= STATE FLOW ================= */
 
     private void onWantedStateChange() {
+        if (isManualMode()) return;
         shooterSubsystem.setWantedState(wantedState);
         feederSubsystem.setWantedState(wantedState);
         hoodSubsystem.setWantedState(wantedState);
@@ -137,6 +146,18 @@ public class Superstructure extends SubsystemBase {
         } else {
             currentState = CurrentState.IDLE;
         }
+    }
+
+    public void setControlMode(RobotControlState mode) {
+        this.currentRobotControlState = mode;
+    }
+
+    public void setSuperstateMode() {
+        setControlMode(RobotControlState.SUPERSTATE);
+    }
+    
+    public void setManualMode() {
+        setControlMode(RobotControlState.MANUAL_MODE);
     }
 
     public void setWantedState(WantedState state) {
@@ -169,6 +190,24 @@ public class Superstructure extends SubsystemBase {
 
     public Command setL3_CLIMBstate() {
         return runOnce(() -> setWantedState(WantedState.L3_CLIMB));
+    }
+
+    public Command toggleControlState() {
+        return runOnce(() -> {
+            if (isSuperstateMode()) {
+                setManualMode();;
+            } else {
+                setSuperstateMode();
+            }
+        });
+    }
+
+    public boolean isSuperstateMode() {
+        return currentRobotControlState == RobotControlState.SUPERSTATE;
+    }
+
+    public boolean isManualMode() {
+        return currentRobotControlState == RobotControlState.MANUAL_MODE;
     }
 
     public WantedState getWantedState() {

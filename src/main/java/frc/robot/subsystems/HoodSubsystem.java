@@ -111,6 +111,7 @@ public class HoodSubsystem extends SubsystemBase {
                         : HoodState.AT_TARGET;
             }
         }
+        if (Superstructure.getInstance().isManualMode()) return;
         switch (currentWantedState) {
             case IDLE:
             case HOME:

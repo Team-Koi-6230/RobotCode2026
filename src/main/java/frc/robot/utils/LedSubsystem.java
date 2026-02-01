@@ -8,6 +8,7 @@ import edu.wpi.first.wpilibj.LEDPattern;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import frc.robot.subsystems.Superstructure;
 import frc.robot.subsystems.Superstructure.WantedState;
 
 public class LedSubsystem extends SubsystemBase {
@@ -58,21 +59,23 @@ public class LedSubsystem extends SubsystemBase {
     }
 
     private LEDPattern getStatePattern() {
-        switch (wantedState) {
-            case HOME:
-                return Constants.LEDconstants.kIdleLED;
-            case PREPARING_SHOOTER:
-                return Constants.LEDconstants.kPrepLED;
-            case SHOOTING:
-                return Constants.LEDconstants.kShootLED;
-            case INTAKING:
-                return Constants.LEDconstants.kIntakeLED;
-            case L1_CLIMB:
-            case L3_CLIMB:
-                return Constants.LEDconstants.kClimbsLED;
-            default:
-                break;
+        if (Superstructure.getInstance().isSuperstateMode()) {
+            switch (wantedState) {
+                case HOME:
+                    return Constants.LEDconstants.kIdleLED;
+                case PREPARING_SHOOTER:
+                    return Constants.LEDconstants.kPrepLED;
+                case SHOOTING:
+                    return Constants.LEDconstants.kShootLED;
+                case INTAKING:
+                    return Constants.LEDconstants.kIntakeLED;
+                case L1_CLIMB:
+                case L3_CLIMB:
+                    return Constants.LEDconstants.kClimbsLED;
+                default:
+                    break;
+            }
         }
-        return null;
+        return Constants.LEDconstants.kIdleLED;
     }
 }
