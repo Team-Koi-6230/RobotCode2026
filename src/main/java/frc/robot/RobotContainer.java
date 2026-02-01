@@ -83,6 +83,8 @@ public class RobotContainer {
     BooleanSupplier isSuperstate = () -> superstructure.isSuperstateMode();
     BooleanSupplier isManualMode = () -> superstructure.isManualMode();
 
+    System.out.println(FieldConstants.Hub.innerCenterPoint.getX() + " | " + FieldConstants.Hub.innerCenterPoint.getY());
+
     rumbleSubsystem.setControllers(m_driverController, m_operatorController);
 
     Command driveFieldOrientedAngularVelocity = drivebase.driveFieldOriented(driveAngularVelocity);
