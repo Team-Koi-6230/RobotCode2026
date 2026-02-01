@@ -140,7 +140,7 @@ public class ClimberSubsystem extends SubsystemBase {
   }
 
   public boolean isReady() {
-    return false; // Make me ready!
+    return true;
   }
   private void HandleL1()
   {
