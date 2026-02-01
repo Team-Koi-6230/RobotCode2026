@@ -199,7 +199,12 @@ public class ClimberSubsystem extends SubsystemBase {
         case PREPARING_SHOOTER:
           setHeightCommandGround(0);
           break;
-
+        case L1_CLIMB:
+          HandleL1();
+          break;
+        case L3_CLIMB:
+          HandleL3();
+          break;
         default:
           break;
       }
