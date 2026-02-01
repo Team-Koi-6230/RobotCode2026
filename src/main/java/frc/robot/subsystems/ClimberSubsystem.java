@@ -11,6 +11,7 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 import com.revrobotics.spark.*;
 import com.revrobotics.RelativeEncoder;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants;
@@ -23,7 +24,16 @@ public class ClimberSubsystem extends SubsystemBase {
     MOVING_HANG,
     AT_TARGET_HANG
   }
-
+  public enum L3ClimbJourney {
+    NONE,
+    L1Open,
+    L1Closed,
+    L2Open,
+    L2Closed,
+    L3Open,
+    L3Closed
+  }
+  private L3ClimbJourney L3Journey;
   private double targetHeight = 0.0;
   private ClimberState state = ClimberState.MOVING_GROUND;
   private WantedState currentWantedState;
@@ -33,6 +43,7 @@ public class ClimberSubsystem extends SubsystemBase {
   private final DutyCycleEncoder abs_encoder;
   private final SparkClosedLoopController closedLoop;
   private boolean isGrounded = true;
+  private boolean YoniHomo=false;//yoni we lov u
 
   public ClimberSubsystem() {
     m_motor = new SparkMax(Constants.ClimberConstants.kMainMotorID, MotorType.kBrushless);
@@ -123,6 +134,78 @@ public class ClimberSubsystem extends SubsystemBase {
 
   @Override
   public void periodic() {
+    handleState();
+
+    motorLogic();
+  }
+
+  public boolean isReady() {
+    return false; // Make me ready!
+  }
+  private void HandleL1()
+  {
+    setPositionGround(Constants.ClimberConstants.kL1ExtendHeight);
+    if (state==ClimberState.AT_TARGET_GROUND) 
+    {
+      YoniHomo=true; 
+    }
+    if(YoniHomo){
+      setPositionHang(Constants.ClimberConstants.kL1CloseHeight);
+    }
+  }
+  private void HandleL3()
+  {
+    switch (L3Journey) {
+      case NONE:
+      setPositionGround(Constants.ClimberConstants.kL1ExtendHeight);
+      break;
+      case L1Open:
+      setPositionHang(Constants.ClimberConstants.kL1CloseHeight);
+      break;
+      case L1Closed:
+      setPositionHang(Constants.ClimberConstants.kL2ExtendHeight);
+      break;
+      case L2Open:
+      setPositionHang(Constants.ClimberConstants.kL2CloseHeight);
+      break;
+      case L3Closed:
+      setPositionHang(Constants.ClimberConstants.kL3ExtendHeight);
+      break;
+      default:
+        break;
+    }
+    if(L3Journey==L3ClimbJourney.NONE||L3Journey==L3ClimbJourney.L1Closed||L3Journey==L3ClimbJourney.L2Closed)
+    {
+      if(state==ClimberState.AT_TARGET_GROUND)
+      {
+        L3Journey = L3ClimbJourney.values()[L3Journey.ordinal() + 1];
+      }
+    }
+    if(L3Journey==L3ClimbJourney.L1Open||L3Journey==L3ClimbJourney.L2Open||L3Journey==L3ClimbJourney.L3Open)
+    {
+      if(state==ClimberState.AT_TARGET_GROUND)
+      {
+        L3Journey = L3ClimbJourney.values()[L3Journey.ordinal() + 1];
+      }
+    }
+    
+  }
+
+  private void handleState() {
+    switch (currentWantedState) {
+      case IDLE:
+      case HOME:
+      case SHOOTING:
+      case PREPARING_SHOOTER: 
+      setHeightCommandGround(0);
+        break;
+    
+      default:
+        break;
+    }
+  }
+
+  private void motorLogic() {
     if (isGrounded) {
       closedLoop.setSetpoint(targetHeight, ControlType.kPosition, ClosedLoopSlot.kSlot0);
       if (Math.abs(targetHeight - getHeight()) < Constants.ClimberConstants.kTolerance) {
@@ -138,11 +221,6 @@ public class ClimberSubsystem extends SubsystemBase {
         state = ClimberState.MOVING_GROUND;
       }
     }
-
-  }
-
-  public boolean isReady() {
-    return false; // Make me ready!
   }
 
   public void setWantedState(WantedState wantedState) {
