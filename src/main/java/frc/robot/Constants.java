@@ -136,6 +136,14 @@ public final class Constants {
     public static final double kShakeDelay = 0.3;
     public static final double kShakeMax = 40;
     public static final double kShakeMin = 10;
+
+    public static final double kMutTragetAngle = 0;
+    public static final double kMutVolts = 0;
+    public static final double kMutVelocity = 0;
+
+    public static final double kMaxPosition = 0;
+    public static final double kMinPosition = 0;
+
   }
 
   public static class IntakeRollerConstants {
@@ -187,6 +195,13 @@ public final class Constants {
     public static final double kL2CloseHeight = 0.0;
     public static final double kL3ExtendHeight = 0.0;
     public static final double kL3CloseHeight = 0.0;
+
+    public static final double kMutTragetAngle = 0;
+    public static final double kMutVolts = 0;
+    public static final double kMutVelocity = 0;
+
+    public static final double kMaxPosition = 0;
+    public static final double kMinPosition = 0;
   }
 
   public static class LEDconstants {

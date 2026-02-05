@@ -9,10 +9,24 @@ import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import com.revrobotics.spark.*;
+
+import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.Rotations;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
+import static edu.wpi.first.units.Units.Volts;
+
 import com.revrobotics.RelativeEncoder;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Mechanism;
+import edu.wpi.first.units.measure.MutAngle;
+import edu.wpi.first.units.measure.MutAngularVelocity;
+import edu.wpi.first.units.measure.MutVoltage;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants;
 import frc.robot.subsystems.Superstructure.WantedState;
@@ -46,6 +60,10 @@ public class ClimberSubsystem extends SubsystemBase {
   private final SparkClosedLoopController closedLoop;
   private boolean isGrounded = true;
   private boolean hasExtendedL1 = false;
+  private final SysIdRoutine m_SysIdRoutine;
+  private final MutVoltage m_appliedVoltage;
+    private final MutAngle m_angle;
+    private final MutAngularVelocity m_velocity;
 
   public ClimberSubsystem() {
     m_motor = new SparkMax(Constants.ClimberConstants.kMainMotorID, MotorType.kBrushless);
@@ -56,6 +74,25 @@ public class ClimberSubsystem extends SubsystemBase {
     closedLoop = m_motor.getClosedLoopController();
     SparkMaxConfig config = new SparkMaxConfig();
     SparkMaxConfig followerConfig = new SparkMaxConfig();
+    
+    //SysId
+    m_angle = Radians.mutable(Constants.ClimberConstants.kMutTragetAngle);
+    m_appliedVoltage = Volts.mutable(Constants.ClimberConstants.kMutVolts);
+    m_velocity = RadiansPerSecond.mutable(Constants.ClimberConstants.kMutVelocity);
+
+    m_SysIdRoutine = new SysIdRoutine(new Config(), new Mechanism(
+            m_motor::setVoltage,
+             log -> {
+                // Record a frame for the intake motor.
+                log.motor("IntakeArm")
+                    .voltage(
+                        m_appliedVoltage.mut_replace(
+                            m_motor.get() * RobotController.getBatteryVoltage(), Volts))
+                    .angularPosition(m_angle.mut_replace(encoder.getPosition(), Rotations))
+                    .angularVelocity(
+                        m_velocity.mut_replace(encoder.getVelocity(), RotationsPerSecond));
+              }, this
+            ));
 
     // slot 0 is for ground and clawed, slot 1 is for when the entire robot's mass
     // is on the climber elevator.
@@ -95,6 +132,14 @@ public class ClimberSubsystem extends SubsystemBase {
 
     encoder.setPosition(abs_encoder.get());
   }
+
+  public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
+  return m_SysIdRoutine.quasistatic(direction);
+}
+
+public Command sysIdDynamic(SysIdRoutine.Direction direction) {
+  return m_SysIdRoutine.dynamic(direction);
+}
 
   public Command setHeightCommandGround(double height) {
     return runOnce(() -> {

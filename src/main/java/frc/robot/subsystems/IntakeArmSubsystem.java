@@ -1,5 +1,16 @@
 package frc.robot.subsystems;
 
+import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.Rotations;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
+import static edu.wpi.first.units.Units.Volts;
+
+import java.lang.constant.Constable;
+import java.lang.invoke.VolatileCallSite;
+import java.security.PublicKey;
+import java.util.function.Consumer;
+
 import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
@@ -10,10 +21,18 @@ import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 
+import edu.wpi.first.units.measure.MutAngle;
+import edu.wpi.first.units.measure.MutAngularVelocity;
+import edu.wpi.first.units.measure.MutVoltage;
+import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Mechanism;
+import frc.robot.Constants;
 import frc.robot.Constants.IntakeArmConstants;
 import frc.robot.subsystems.Superstructure.WantedState;
 
@@ -22,6 +41,10 @@ public class IntakeArmSubsystem extends SubsystemBase {
     private final SparkMax m_motor;
     private SparkClosedLoopController m_controller;
     private final RelativeEncoder m_relativeEncoder;
+    private final SysIdRoutine m_SysIdRoutine;
+    private final MutVoltage m_appliedVoltage;
+    private final MutAngle m_angle;
+    private final MutAngularVelocity m_velocity;
 
     private double targetAngle;
 
@@ -48,8 +71,31 @@ public class IntakeArmSubsystem extends SubsystemBase {
         m_motor = new SparkMax(IntakeArmConstants.kMotorID, MotorType.kBrushless);
         targetAngle = 0;
 
+        //set relative encoder
+        m_relativeEncoder = m_motor.getEncoder();
+
         // set config pid & ff
         SparkMaxConfig config = new SparkMaxConfig();
+
+        //SysId
+        m_angle = Radians.mutable(Constants.IntakeArmConstants.kMutTragetAngle);
+        m_appliedVoltage = Volts.mutable(Constants.IntakeArmConstants.kMutVolts);
+        m_velocity = RadiansPerSecond.mutable(Constants.IntakeArmConstants.kMutVelocity);
+
+        m_SysIdRoutine = new SysIdRoutine(new Config(), new Mechanism(
+            m_motor::setVoltage,
+             log -> {
+                // Record a frame for the intake motor.
+                log.motor("IntakeArm")
+                    .voltage(
+                        m_appliedVoltage.mut_replace(
+                            m_motor.get() * RobotController.getBatteryVoltage(), Volts))
+                    .angularPosition(m_angle.mut_replace(m_relativeEncoder.getPosition(), Rotations))
+                    .angularVelocity(
+                        m_velocity.mut_replace(m_relativeEncoder.getVelocity(), RotationsPerSecond));
+              }, this
+             
+            ));
 
         config.closedLoop
                 .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
@@ -68,8 +114,6 @@ public class IntakeArmSubsystem extends SubsystemBase {
                 ResetMode.kNoResetSafeParameters,
                 PersistMode.kNoPersistParameters);
 
-        // set relative encoder
-        m_relativeEncoder = m_motor.getEncoder();
 
         // set motor contoller
         m_controller = m_motor.getClosedLoopController();
@@ -83,6 +127,14 @@ public class IntakeArmSubsystem extends SubsystemBase {
             setAngle(angle);
         });
     }
+
+    public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
+  return m_SysIdRoutine.quasistatic(direction);
+}
+
+public Command sysIdDynamic(SysIdRoutine.Direction direction) {
+  return m_SysIdRoutine.dynamic(direction);
+}
 
     // set target angle
     public void setAngle(double angle) {
@@ -175,8 +227,7 @@ public class IntakeArmSubsystem extends SubsystemBase {
     }
 
     @Override
-    public void simulationPeriodic() {
-    }
+    public void simulationPeriodic() {}
 
     public boolean isReady() {
         switch (currentWantedState) {

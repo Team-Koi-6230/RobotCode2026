@@ -17,6 +17,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
 public class RobotContainer {
 
@@ -152,6 +153,34 @@ public class RobotContainer {
     m_driverController.povLeft()
         .onTrue(superstructure.toggleControlState());
   }
+
+public Command getIntakeArmSysIdQuasistatic() {
+  return Commands.run(() -> superstructure.getIntakeArmSubsystem().sysIdQuasistatic(SysIdRoutine.Direction.kForward)
+  .until(() -> superstructure.getIntakeArmSubsystem().getAngle() > Constants.IntakeArmConstants.kMaxPosition)
+  .until(() -> superstructure.getIntakeArmSubsystem().getAngle() > Constants.IntakeArmConstants.kMinPosition)); 
+  // Stop if angle exceeds max/min position
+}
+
+public Command getIntakeArmSysIdDynamicCommand() {
+  return Commands.run(() -> superstructure.getIntakeArmSubsystem().sysIdDynamic(SysIdRoutine.Direction.kForward)
+  .until(() -> superstructure.getIntakeArmSubsystem().getAngle() > Constants.IntakeArmConstants.kMaxPosition)
+  .until(() -> superstructure.getIntakeArmSubsystem().getAngle() > Constants.IntakeArmConstants.kMinPosition)); 
+  // Stop if angle exceeds max/min position
+}
+
+public Command getClimberSysIdQuasistatic() {
+  return Commands.run(() -> superstructure.getClimberSubsystem().sysIdQuasistatic(SysIdRoutine.Direction.kForward)
+  .until(() -> superstructure.getIntakeArmSubsystem().getAngle() > Constants.ClimberConstants.kMaxPosition)
+  .until(() -> superstructure.getIntakeArmSubsystem().getAngle() > Constants.ClimberConstants.kMinPosition)); 
+  // Stop if angle exceeds max/min position
+}
+
+public Command getCLimberSysIdDynamicCommand() {
+  return Commands.run(() -> superstructure.getClimberSubsystem().sysIdDynamic(SysIdRoutine.Direction.kForward)
+  .until(() -> superstructure.getIntakeArmSubsystem().getAngle() > Constants.ClimberConstants.kMaxPosition)
+  .until(() -> superstructure.getIntakeArmSubsystem().getAngle() > Constants.ClimberConstants.kMinPosition)); 
+  // Stop if angle exceeds max/min position
+}
 
   public Command getAutonomousCommand() {
     return autonChooser.getSelected();
