@@ -154,32 +154,28 @@ public class RobotContainer {
         .onTrue(superstructure.toggleControlState());
   }
 
-public Command getIntakeArmSysIdQuasistatic() {
-  return Commands.run(() -> superstructure.getIntakeArmSubsystem().sysIdQuasistatic(SysIdRoutine.Direction.kForward)
-  .until(() -> superstructure.getIntakeArmSubsystem().getAngle() > Constants.IntakeArmConstants.kMaxPosition)
-  .until(() -> superstructure.getIntakeArmSubsystem().getAngle() > Constants.IntakeArmConstants.kMinPosition)); 
-  // Stop if angle exceeds max/min position
+public Command getIntakeArmSysIdQuasistatic(SysIdRoutine.Direction direction) {
+  return superstructure.getIntakeArmSubsystem().sysIdQuasistatic(direction)
+    .until(() -> superstructure.getIntakeArmSubsystem().getAngle() > Constants.IntakeArmConstants.kMaxPosition ||
+                 superstructure.getIntakeArmSubsystem().getAngle() < Constants.IntakeArmConstants.kMinPosition);
 }
 
-public Command getIntakeArmSysIdDynamicCommand() {
-  return Commands.run(() -> superstructure.getIntakeArmSubsystem().sysIdDynamic(SysIdRoutine.Direction.kForward)
-  .until(() -> superstructure.getIntakeArmSubsystem().getAngle() > Constants.IntakeArmConstants.kMaxPosition)
-  .until(() -> superstructure.getIntakeArmSubsystem().getAngle() > Constants.IntakeArmConstants.kMinPosition)); 
-  // Stop if angle exceeds max/min position
+public Command getIntakeArmSysIdDynamic(SysIdRoutine.Direction direction) {
+  return superstructure.getIntakeArmSubsystem().sysIdDynamic(direction)
+    .until(() -> superstructure.getIntakeArmSubsystem().getAngle() > Constants.IntakeArmConstants.kMaxPosition ||
+                 superstructure.getIntakeArmSubsystem().getAngle() < Constants.IntakeArmConstants.kMinPosition);
 }
 
-public Command getClimberSysIdQuasistatic() {
-  return Commands.run(() -> superstructure.getClimberSubsystem().sysIdQuasistatic(SysIdRoutine.Direction.kForward)
-  .until(() -> superstructure.getIntakeArmSubsystem().getAngle() > Constants.ClimberConstants.kMaxPosition)
-  .until(() -> superstructure.getIntakeArmSubsystem().getAngle() > Constants.ClimberConstants.kMinPosition)); 
-  // Stop if angle exceeds max/min position
+public Command getClimberSysIdQuasistatic(SysIdRoutine.Direction direction) {
+  return superstructure.getClimberSubsystem().sysIdQuasistatic(direction)
+    .until(() -> superstructure.getClimberSubsystem().getHeight() > Constants.ClimberConstants.kMaxPosition ||
+                 superstructure.getClimberSubsystem().getHeight() < Constants.ClimberConstants.kMinPosition);
 }
 
-public Command getCLimberSysIdDynamicCommand() {
-  return Commands.run(() -> superstructure.getClimberSubsystem().sysIdDynamic(SysIdRoutine.Direction.kForward)
-  .until(() -> superstructure.getIntakeArmSubsystem().getAngle() > Constants.ClimberConstants.kMaxPosition)
-  .until(() -> superstructure.getIntakeArmSubsystem().getAngle() > Constants.ClimberConstants.kMinPosition)); 
-  // Stop if angle exceeds max/min position
+public Command getClimberSysIdDynamic(SysIdRoutine.Direction direction) {
+  return superstructure.getClimberSubsystem().sysIdDynamic(direction)
+    .until(() -> superstructure.getClimberSubsystem().getHeight() > Constants.ClimberConstants.kMaxPosition ||
+                 superstructure.getClimberSubsystem().getHeight() < Constants.ClimberConstants.kMinPosition);
 }
 
   public Command getAutonomousCommand() {

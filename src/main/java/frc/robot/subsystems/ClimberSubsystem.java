@@ -84,7 +84,7 @@ public class ClimberSubsystem extends SubsystemBase {
             m_motor::setVoltage,
              log -> {
                 // Record a frame for the intake motor.
-                log.motor("IntakeArm")
+                log.motor("Climber")
                     .voltage(
                         m_appliedVoltage.mut_replace(
                             m_motor.get() * RobotController.getBatteryVoltage(), Volts))
