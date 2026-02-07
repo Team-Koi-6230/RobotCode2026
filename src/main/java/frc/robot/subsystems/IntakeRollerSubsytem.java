@@ -6,6 +6,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
+import frc.robot.subsystems.IntakeArmSubsystem.IntakeArmState;
 
 public class IntakeRollerSubsytem extends SubsystemBase {
     public enum IntakeRollerState {
@@ -41,7 +42,7 @@ public class IntakeRollerSubsytem extends SubsystemBase {
     @Override
     public void periodic() {
         if (Superstructure.getInstance().isManualMode()) return;
-        if (currentWantedState == WantedState.INTAKING) {
+        if (currentWantedState == WantedState.INTAKING && Superstructure.getInstance().getIntakeState() == IntakeArmState.OPEN) {
             setVoltage(Constants.IntakeRollerConstants.kIntakePower);
         }
         else {

@@ -24,7 +24,6 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Mechanism;
 import edu.wpi.first.units.measure.MutAngle;
 import edu.wpi.first.units.measure.MutAngularVelocity;
 import edu.wpi.first.units.measure.MutVoltage;
-import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -219,10 +218,10 @@ public Command sysIdDynamic(SysIdRoutine.Direction direction) {
   private void HandleL3() {
     switch (L3Journey) {
       case NONE:
-        setPositionGround(Constants.ClimberConstants.kL1ExtendHeight);
+        setPositionGround(Constants.ClimberConstants.k1StageExtendHeight);
         break;
       case L1Open:
-        setPositionHang(Constants.ClimberConstants.kL1CloseHeight);
+        setPositionHang(Constants.ClimberConstants.k1StageCloseHeight);
         break;
       case L1Closed:
         setPositionHang(Constants.ClimberConstants.kL2ExtendHeight);
