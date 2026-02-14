@@ -20,6 +20,7 @@ import edu.wpi.first.units.measure.MutAngularVelocity;
 import edu.wpi.first.units.measure.MutVoltage;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -53,6 +54,15 @@ public class IntakeArmSubsystem extends SubsystemBase {
     public IntakeArmState state = IntakeArmState.IDLE;
     private WantedState currentWantedState;
 
+    private double lastP = IntakeArmConstants.kP;
+    private double lastI = IntakeArmConstants.kI;
+    private double lastD = IntakeArmConstants.kD;
+    private double lastS = IntakeArmConstants.kS;
+    private double lastV = IntakeArmConstants.kV;
+    private double lastA = IntakeArmConstants.kA;
+    private double lastG = IntakeArmConstants.kG;
+    private double lastCosRatio = IntakeArmConstants.kCosRatio;
+
     public IntakeArmSubsystem() {
         // set absolute encoder
         m_absoluteEncoder = new DutyCycleEncoder(
@@ -64,49 +74,45 @@ public class IntakeArmSubsystem extends SubsystemBase {
         m_motor = new SparkMax(IntakeArmConstants.kMotorID, MotorType.kBrushless);
         targetAngle = 0;
 
-        //set relative encoder
+        // set relative encoder
         m_relativeEncoder = m_motor.getEncoder();
 
         // set config pid & ff
         SparkMaxConfig config = new SparkMaxConfig();
 
-        //SysId
+        // SysId
         m_angle = Radians.mutable(Constants.IntakeArmConstants.kMutTragetAngle);
         m_appliedVoltage = Volts.mutable(Constants.IntakeArmConstants.kMutVolts);
         m_velocity = RadiansPerSecond.mutable(Constants.IntakeArmConstants.kMutVelocity);
 
         m_SysIdRoutine = new SysIdRoutine(new Config(), new Mechanism(
-            m_motor::setVoltage,
-             log -> {
-                // Record a frame for the intake motor.
-                log.motor("IntakeArm")
-                    .voltage(
-                        m_appliedVoltage.mut_replace(
-                            m_motor.get() * RobotController.getBatteryVoltage(), Volts))
-                    .angularPosition(m_angle.mut_replace(m_relativeEncoder.getPosition(), Rotations))
-                    .angularVelocity(
-                        m_velocity.mut_replace(m_relativeEncoder.getVelocity(), RotationsPerSecond));
-              }, this
-             
-            ));
+                m_motor::setVoltage,
+                log -> {
+                    // Record a frame for the intake motor.
+                    log.motor("IntakeArm")
+                            .voltage(
+                                    m_appliedVoltage.mut_replace(
+                                            m_motor.get() * RobotController.getBatteryVoltage(), Volts))
+                            .angularPosition(m_angle.mut_replace(m_relativeEncoder.getPosition(), Rotations))
+                            .angularVelocity(
+                                    m_velocity.mut_replace(m_relativeEncoder.getVelocity(), RotationsPerSecond));
+                }, this
 
-        config.closedLoop
-                .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
-                .pid(
-                        IntakeArmConstants.kP,
-                        IntakeArmConstants.kI,
-                        IntakeArmConstants.kD).feedForward
-                .kS(IntakeArmConstants.kS)
-                .kV(IntakeArmConstants.kV)
-                .kA(IntakeArmConstants.kA)
-                .kCos(IntakeArmConstants.kG)
-                .kCosRatio(IntakeArmConstants.kCosRatio);
+        ));
+
+        SmartDashboard.putNumber("Arm/kP", IntakeArmConstants.kP);
+        SmartDashboard.putNumber("Arm/kI", IntakeArmConstants.kI);
+        SmartDashboard.putNumber("Arm/kD", IntakeArmConstants.kD);
+        SmartDashboard.putNumber("Arm/kS", IntakeArmConstants.kS);
+        SmartDashboard.putNumber("Arm/kV", IntakeArmConstants.kV);
+        SmartDashboard.putNumber("Arm/kA", IntakeArmConstants.kA);
+        SmartDashboard.putNumber("Arm/kG", IntakeArmConstants.kG);
+        SmartDashboard.putNumber("Arm/kCosRatio", IntakeArmConstants.kCosRatio);
 
         // set motor config
         m_motor.configure(config,
                 ResetMode.kNoResetSafeParameters,
                 PersistMode.kNoPersistParameters);
-
 
         // set motor contoller
         m_controller = m_motor.getClosedLoopController();
@@ -122,12 +128,12 @@ public class IntakeArmSubsystem extends SubsystemBase {
     }
 
     public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
-  return m_SysIdRoutine.quasistatic(direction);
-}
+        return m_SysIdRoutine.quasistatic(direction);
+    }
 
-public Command sysIdDynamic(SysIdRoutine.Direction direction) {
-  return m_SysIdRoutine.dynamic(direction);
-}
+    public Command sysIdDynamic(SysIdRoutine.Direction direction) {
+        return m_SysIdRoutine.dynamic(direction);
+    }
 
     // set target angle
     public void setAngle(double angle) {
@@ -171,6 +177,7 @@ public Command sysIdDynamic(SysIdRoutine.Direction direction) {
 
     @Override
     public void periodic() {
+        tuning();
         if (currentWantedState != null && Superstructure.getInstance().isSuperstateMode()) {
             handleWantedState();
         }
@@ -187,6 +194,44 @@ public Command sysIdDynamic(SysIdRoutine.Direction direction) {
             state = IntakeArmState.SHAKE_MAX;
         } else if (isAtShakeMin()) {
             state = IntakeArmState.SHAKE_MIN;
+        }
+    }
+
+    private void tuning() {
+        double p = SmartDashboard.getNumber("Arm/kP", IntakeArmConstants.kP);
+        double i = SmartDashboard.getNumber("Arm/kI", IntakeArmConstants.kI);
+        double d = SmartDashboard.getNumber("Arm/kD", IntakeArmConstants.kD);
+        double s = SmartDashboard.getNumber("Arm/kS", IntakeArmConstants.kS);
+        double v = SmartDashboard.getNumber("Arm/kV", IntakeArmConstants.kV);
+        double a = SmartDashboard.getNumber("Arm/kA", IntakeArmConstants.kA);
+        double g = SmartDashboard.getNumber("Arm/kG", IntakeArmConstants.kG);
+        double cosRatio = SmartDashboard.getNumber("Arm/kCosRatio", IntakeArmConstants.kCosRatio);
+
+        if (p != lastP || i != lastI || d != lastD || s != lastS ||
+                v != lastV || a != lastA || g != lastG || cosRatio != lastCosRatio) {
+
+            lastP = p;
+            lastI = i;
+            lastD = d;
+            lastS = s;
+            lastV = v;
+            lastA = a;
+            lastG = g;
+            lastCosRatio = cosRatio;
+
+            SparkMaxConfig tuneConfig = new SparkMaxConfig();
+            tuneConfig.closedLoop
+                    .pid(p, i, d).feedForward
+                    .kS(s)
+                    .kV(v)
+                    .kA(a)
+                    .kCos(g)
+                    .kCosRatio(cosRatio);
+
+            // Apply changes without a hard reset
+            m_motor.configure(tuneConfig,
+                    SparkMax.ResetMode.kNoResetSafeParameters,
+                    SparkMax.PersistMode.kNoPersistParameters);
         }
     }
 
@@ -222,7 +267,8 @@ public Command sysIdDynamic(SysIdRoutine.Direction direction) {
     }
 
     @Override
-    public void simulationPeriodic() {}
+    public void simulationPeriodic() {
+    }
 
     public boolean isReady() {
         switch (currentWantedState) {
