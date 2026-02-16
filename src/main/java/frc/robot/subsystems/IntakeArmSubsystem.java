@@ -7,6 +7,7 @@ import com.revrobotics.spark.SparkClosedLoopController;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.config.SparkMaxConfig;
+import com.revrobotics.spark.config.MAXMotionConfig.MAXMotionPositionMode;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
@@ -53,6 +54,11 @@ public class IntakeArmSubsystem extends SubsystemBase {
                 .kA(IntakeArmConstants.kA)
                 .kCos(IntakeArmConstants.kG)
                 .kCosRatio(IntakeArmConstants.kCosRatio);
+        config.closedLoop.maxMotion.
+        allowedProfileError(0.5)
+        .positionMode(MAXMotionPositionMode.kMAXMotionTrapezoidal)
+        .maxAcceleration(0.5)
+        .cruiseVelocity(1);
 
         config.encoder.positionConversionFactor(IntakeArmConstants.kGearRatio);
 
@@ -69,10 +75,10 @@ public class IntakeArmSubsystem extends SubsystemBase {
 
         if (currentWantedState != null && Superstructure.getInstance().isSuperstateMode()) {
             handleWantedState();
-        }
+        } 
 
         if (!Double.isNaN(targetAngle)) {
-            m_controller.setSetpoint(this.targetAngle, ControlType.kPosition);
+            m_controller.setSetpoint(this.targetAngle, ControlType.kMAXMotionPositionControl);
         } else {
             m_motor.stopMotor();
         }
@@ -184,6 +190,7 @@ public class IntakeArmSubsystem extends SubsystemBase {
         SmartDashboard.putNumber("Arm/Rel encoder angle", getAngle());
         SmartDashboard.putNumber("Arm/TargetAngle", targetAngle);
         SmartDashboard.putBoolean("Arm/is at position", Math.abs(targetAngle - getAngle()) < IntakeArmConstants.kTolerance);
+        SmartDashboard.putNumber("Arm/Error", targetAngle - getAngle());
         double p = SmartDashboard.getNumber("Arm/kP", IntakeArmConstants.kP);
         double i = SmartDashboard.getNumber("Arm/kI", IntakeArmConstants.kI);
         double d = SmartDashboard.getNumber("Arm/kD", IntakeArmConstants.kD);

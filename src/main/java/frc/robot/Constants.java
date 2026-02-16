@@ -117,26 +117,25 @@ public final class Constants {
     public static final int kAbsoluteEncoderID = 0;
     public static final int kMotorID = 15;
 
-    public static final double kP = 0.001;
+    public static final double kP = 0.00000001;
     public static final double kI = 0;
     public static final double kD = 0;
-    public static final double kFF = 0;
 
     public static final double kS = 0.03;
-    public static final double kV = 0.1;
+    public static final double kV = 0.05;
     public static final double kA = 0;
-    public static final double kG = 0.2;
+    public static final double kG = 0.45;
     public static final double kCosRatio = 1;
 
     public static final double kGearRatio = 14.8;
 
     public static final int kAbsoluteEncoderRange = 360;
-    public static final int kAbsoluteEncoderOffset = -167;
+    public static final int kAbsoluteEncoderOffset = -10;
 
     public static final double kTolerance = 0.5;
 
-    public static final int kOpenAngle = 329;
-    public static final int kClosedAngle = 28;
+    public static final int kOpenAngle = 310;
+    public static final int kClosedAngle = 30;
 
     public static final double kShakeDelay = 0.3;
     public static final double kShakeMax = 40;

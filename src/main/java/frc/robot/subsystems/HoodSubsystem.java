@@ -6,6 +6,7 @@ import frc.robot.subsystems.Superstructure.WantedState;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.Servo;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -123,6 +124,8 @@ public void setAngle(double degrees) {
                         : HoodState.AT_TARGET;
             }
         }
+
+        SmartDashboard.putNumber("Servo/position", servoLeft.get());
 
         if (Superstructure.getInstance().isManualMode()) return;
 
