@@ -55,15 +55,15 @@ public class ShooterSubsystem extends SubsystemBase {
         SparkFlexConfig m_config = new SparkFlexConfig();
         m_config.inverted(Constants.ShooterConstants.kInverted)
                 .idleMode(IdleMode.kCoast)
-                .voltageCompensation(12)
-                .smartCurrentLimit(80);
+                .voltageCompensation(12);
+//                .smartCurrentLimit(80);
 
         m_motor.configure(m_config, com.revrobotics.ResetMode.kResetSafeParameters,
                 com.revrobotics.PersistMode.kPersistParameters);
 
         // Secondary motor follows main
         SparkFlexConfig s_config = new SparkFlexConfig();
-        s_config.follow(m_motor, !Constants.ShooterConstants.kInverted);
+        s_config.follow(m_motor, true);
         s_motor.configure(s_config, com.revrobotics.ResetMode.kResetSafeParameters,
                 com.revrobotics.PersistMode.kPersistParameters);
     }
@@ -72,6 +72,8 @@ public class ShooterSubsystem extends SubsystemBase {
     public void periodic() {
         if (Superstructure.getInstance().isSuperstateMode())
             handleWantedState();
+
+        System.out.println(targetRPM);
 
         if (!Double.isNaN(targetRPM)) {
             handleShootingTarget();
@@ -170,10 +172,12 @@ public class ShooterSubsystem extends SubsystemBase {
             state = ShooterState.TORQUE_CURRENT_BANG_BANG;
         } else {
             // Bang-bang open loop
-            if (targetRPM < getVelocity()) {
-                closedLoop.setSetpoint(1.0, ControlType.kDutyCycle);
+            System.out.println(targetRPM < getVelocity());
+            System.out.println(getVelocity());
+            if (targetRPM > getVelocity()) {
+                closedLoop.setSetpoint(12, ControlType.kVoltage);
             } else {
-                closedLoop.setSetpoint(0.0, ControlType.kDutyCycle);
+                closedLoop.setSetpoint(0, ControlType.kVoltage);  
             }
             state = ShooterState.DUTY_CYCLE_BANG_BANG;
         }

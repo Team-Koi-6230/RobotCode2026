@@ -47,6 +47,9 @@ public class IntakeArmSubsystem extends SubsystemBase {
         m_relativeEncoder = m_motor.getEncoder();
 
         SparkMaxConfig config = new SparkMaxConfig();
+
+        config.smartCurrentLimit(20);
+
         config.closedLoop
                 .pid(IntakeArmConstants.kP, IntakeArmConstants.kI, IntakeArmConstants.kD).feedForward
                 .kS(IntakeArmConstants.kS)
@@ -54,13 +57,15 @@ public class IntakeArmSubsystem extends SubsystemBase {
                 .kA(IntakeArmConstants.kA)
                 .kCos(IntakeArmConstants.kG)
                 .kCosRatio(IntakeArmConstants.kCosRatio);
-        config.closedLoop.maxMotion.
-        allowedProfileError(0.5)
-        .positionMode(MAXMotionPositionMode.kMAXMotionTrapezoidal)
-        .maxAcceleration(0.5)
-        .cruiseVelocity(1);
 
-        config.encoder.positionConversionFactor(IntakeArmConstants.kGearRatio);
+        config.closedLoop.maxMotion
+                .maxAcceleration(IntakeArmConstants.kMaxAcceleration)
+                .allowedProfileError(IntakeArmConstants.kTolerance)
+                .cruiseVelocity(IntakeArmConstants.kCruiseVelocity)
+                .positionMode(MAXMotionPositionMode.kMAXMotionTrapezoidal);
+
+        config.encoder.positionConversionFactor(IntakeArmConstants.kGearRatio)
+                .velocityConversionFactor(1 / IntakeArmConstants.kGearRatio);
 
         m_motor.configure(config, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
         m_controller = m_motor.getClosedLoopController();
@@ -75,7 +80,7 @@ public class IntakeArmSubsystem extends SubsystemBase {
 
         if (currentWantedState != null && Superstructure.getInstance().isSuperstateMode()) {
             handleWantedState();
-        } 
+        }
 
         if (!Double.isNaN(targetAngle)) {
             m_controller.setSetpoint(this.targetAngle, ControlType.kMAXMotionPositionControl);
@@ -97,7 +102,8 @@ public class IntakeArmSubsystem extends SubsystemBase {
         double velocity = m_relativeEncoder.getVelocity();
 
         // Only sync if stationary and error is > threshold (e.g. 0.02 units)
-        if (Math.abs(velocity) < 0.01 && Math.abs(currentRel - currentAbs) > 0.02 && Math.abs(targetAngle - getAngle()) < IntakeArmConstants.kTolerance) {
+        if (Math.abs(velocity) < 0.01 && Math.abs(currentRel - currentAbs) > 0.02
+                && Math.abs(targetAngle - getAngle()) < IntakeArmConstants.kTolerance) {
             syncCounter++;
             if (syncCounter > 10) {
                 m_relativeEncoder.setPosition(currentAbs);
@@ -189,7 +195,8 @@ public class IntakeArmSubsystem extends SubsystemBase {
         SmartDashboard.putNumber("Arm/Abs encoder angle", m_absoluteEncoder.get());
         SmartDashboard.putNumber("Arm/Rel encoder angle", getAngle());
         SmartDashboard.putNumber("Arm/TargetAngle", targetAngle);
-        SmartDashboard.putBoolean("Arm/is at position", Math.abs(targetAngle - getAngle()) < IntakeArmConstants.kTolerance);
+        SmartDashboard.putBoolean("Arm/is at position",
+                Math.abs(targetAngle - getAngle()) < IntakeArmConstants.kTolerance);
         SmartDashboard.putNumber("Arm/Error", targetAngle - getAngle());
         double p = SmartDashboard.getNumber("Arm/kP", IntakeArmConstants.kP);
         double i = SmartDashboard.getNumber("Arm/kI", IntakeArmConstants.kI);
@@ -204,7 +211,7 @@ public class IntakeArmSubsystem extends SubsystemBase {
                 v != lastV || a != lastA || g != lastG || cosRatio != lastCosRatio) {
             lastP = p;
             lastI = i;
-            lastD = d;  
+            lastD = d;
             lastS = s;
             lastV = v;
             lastA = a;

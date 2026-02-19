@@ -83,6 +83,14 @@ public class ClimberSubsystem extends SubsystemBase {
         .kV(Constants.ClimberConstants.kV_hang, ClosedLoopSlot.kSlot1)
         .kA(Constants.ClimberConstants.kA_hang, ClosedLoopSlot.kSlot1);
 
+    config.closedLoop.maxMotion
+        .allowedProfileError(Constants.ClimberConstants.kTolerance)
+        .maxAcceleration(Constants.ClimberConstants.kMaxAcceleration)
+        .cruiseVelocity(Constants.ClimberConstants.kMaxVelocity)
+        .allowedProfileError(Constants.ClimberConstants.kTolerance, ClosedLoopSlot.kSlot1)
+        .maxAcceleration(Constants.ClimberConstants.kMaxAcceleration, ClosedLoopSlot.kSlot1)
+        .cruiseVelocity(Constants.ClimberConstants.kMaxVelocity, ClosedLoopSlot.kSlot1);
+
     config.idleMode(IdleMode.kBrake);
     config.encoder
         .positionConversionFactor(Constants.ClimberConstants.kMetersPerRotation)
@@ -154,7 +162,7 @@ public class ClimberSubsystem extends SubsystemBase {
   @Override
   public void periodic() {
     handleState();
-        SmartDashboard.putNumber("mahalit", abs_encoder.get());
+    SmartDashboard.putNumber("mahalit", abs_encoder.get());
     motorLogic();
   }
 

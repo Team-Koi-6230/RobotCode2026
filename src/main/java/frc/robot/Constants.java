@@ -40,15 +40,15 @@ public final class Constants {
   }
 
   public static class ShooterConstants {
-    public static final int kMainMotorID = 20;
-    public static final int kSecondaryMotorID = 21;
+    public static final int kMainMotorID = 21;
+    public static final int kSecondaryMotorID = 20;
 
     public static final double kGearRatio = 1.0;
-    public static final double kTolerance = 200.0;
+    public static final double kTolerance = 1000;
 
-    public static final boolean kInverted = false;
+    public static final boolean kInverted = true;
 
-    public static final double kHoldAmps = 30;
+    public static final double kHoldAmps = 60;
     public static final double kDebouncerTime = 0.1;
 
     public static final double kNeutralZoneShootingRPM = 1000;
@@ -117,43 +117,38 @@ public final class Constants {
     public static final int kAbsoluteEncoderID = 0;
     public static final int kMotorID = 15;
 
-    public static final double kP = 0.00000001;
+    public static final double kP = 0.25;
     public static final double kI = 0;
-    public static final double kD = 0;
+    public static final double kD = 0.26;
 
     public static final double kS = 0.03;
     public static final double kV = 0.05;
-    public static final double kA = 0;
-    public static final double kG = 0.45;
+    public static final double kA = 0.004;
+    public static final double kG = 0.38;
     public static final double kCosRatio = 1;
+    public static final double kMaxAcceleration = 1000;
+    public static final double kCruiseVelocity = 3000;
 
-    public static final double kGearRatio = 14.8;
+    public static final double kGearRatio = 15;
 
     public static final int kAbsoluteEncoderRange = 360;
-    public static final int kAbsoluteEncoderOffset = -10;
+    public static final int kAbsoluteEncoderOffset = 30;
 
-    public static final double kTolerance = 0.5;
+    public static final double kTolerance = 1;
 
-    public static final int kOpenAngle = 310;
-    public static final int kClosedAngle = 30;
+    public static final int kOpenAngle = 320; //320
+    public static final int kClosedAngle = 20;
 
     public static final double kShakeDelay = 0.3;
     public static final double kShakeMax = 40;
     public static final double kShakeMin = 10;
-
-    public static final double kMutTragetAngle = 0;
-    public static final double kMutVolts = 0;
-    public static final double kMutVelocity = 0;
-
-    public static final double kMaxPosition = 0;
-    public static final double kMinPosition = 0;
 
   }
 
   public static class IntakeRollerConstants {
     public static final int kMotorID = 18;
 
-    public static final double kIntakePower = 6;
+    public static final double kIntakePower = 10;
 
     public static final RumblePack kIntakeReadyRumble = new RumblePack(0.3, 0.2, Priority.LOW);
   }
@@ -161,7 +156,7 @@ public final class Constants {
   public static class FeederConstants {
     public static final int kMotorID = 16;
 
-    public static final double kGrabPower = 6;
+    public static final double kGrabPower = 10;
   }
 
   public final class ClimberConstants {
@@ -183,7 +178,10 @@ public final class Constants {
     public static final double kI_hang = 0.0;
     public static final double kD_hang = 0.0;
 
-    public static final double kTolerance = 0.5;
+    public static final double kTolerance = 0.003;
+
+    public static final double kMaxAcceleration = 0;
+    public static final double kMaxVelocity = 0;
 
     public static final int kMainMotorID = 19;
     public static final int kSecondaryMotorID = 20;
@@ -201,13 +199,6 @@ public final class Constants {
     public static final double kL2CloseHeight = 0.0;
     public static final double kL3ExtendHeight = 0.0;
     public static final double kL3CloseHeight = 0.0;
-
-    public static final double kMutTragetAngle = 0;
-    public static final double kMutVolts = 0;
-    public static final double kMutVelocity = 0;
-
-    public static final double kMaxPosition = 0;
-    public static final double kMinPosition = 0;
   }
 
   public static class LEDconstants {

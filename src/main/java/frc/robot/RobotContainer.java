@@ -20,169 +20,187 @@ import frc.robot.utils.RumbleSubsystem;
 import swervelib.SwerveInputStream;
 
 public class RobotContainer {
-    private final CommandXboxController driverController;
-    private final CommandXboxController operatorController;
+        private final CommandXboxController driverController;
+        private final CommandXboxController operatorController;
 
-    private final Superstructure superstructure;
-    private final SwerveSubsystem drivebase;
-    private final RumbleSubsystem rumbleSubsystem;
+        private final Superstructure superstructure;
+        private final SwerveSubsystem drivebase;
+        private final RumbleSubsystem rumbleSubsystem;
 
-    private final SwerveInputStream driveAngularVelocity;
+        private final SwerveInputStream driveAngularVelocity;
 
-    private final SendableChooser<Command> autonChooser = new SendableChooser<>();
+        private final SendableChooser<Command> autonChooser = new SendableChooser<>();
 
-    public RobotContainer() {
-        driverController   = new CommandXboxController(OperatorConstants.kDriverControllerPort);
-        operatorController = new CommandXboxController(OperatorConstants.kOperatorControllerPort);
+        public RobotContainer() {
+                driverController = new CommandXboxController(OperatorConstants.kDriverControllerPort);
+                operatorController = new CommandXboxController(OperatorConstants.kOperatorControllerPort);
 
-        superstructure = Superstructure.getInstance();
-        drivebase = superstructure.getDrivebase();
-        rumbleSubsystem = superstructure.getRumbleSubsystem();
+                superstructure = Superstructure.getInstance();
+                drivebase = superstructure.getDrivebase();
+                rumbleSubsystem = superstructure.getRumbleSubsystem();
 
-        driveAngularVelocity =
-                SwerveInputStream.of(
+                driveAngularVelocity = SwerveInputStream.of(
                                 drivebase.getSwerveDrive(),
                                 () -> -driverController.getLeftY(),
                                 () -> -driverController.getLeftX())
-                        .withControllerRotationAxis(() -> driverController.getRightX())
-                        .deadband(OperatorConstants.kDeadband)
-                        .scaleTranslation(1.0)
-                        .allianceRelativeControl(true);
+                                .withControllerRotationAxis(() -> driverController.getRightX())
+                                .deadband(OperatorConstants.kDeadband)
+                                .scaleTranslation(1.0)
+                                .allianceRelativeControl(true);
 
-        registerAutonCommands();
-        setupAutons();
-        configureBindings();
-    }
+                registerAutonCommands();
+                setupAutons();
+                configureBindings();
+        }
 
-    private void registerAutonCommands() {
-        NamedCommands.registerCommand("Intake", superstructure.setINTAKINGstate());
-        NamedCommands.registerCommand("Prepare shooting", superstructure.setPREPARING_SHOOTERstate());
-        NamedCommands.registerCommand("Shoot", superstructure.setSHOOTINGstate());
-        NamedCommands.registerCommand("L1 Climb", superstructure.setL1_CLIMBstate());
-        NamedCommands.registerCommand("Idle", superstructure.setIDLEstate());
-        NamedCommands.registerCommand("Home", superstructure.setHOMEstate());
-    }
+        private void registerAutonCommands() {
+                NamedCommands.registerCommand("Intake", superstructure.setINTAKINGstate());
+                NamedCommands.registerCommand("Prepare shooting", superstructure.setPREPARING_SHOOTERstate());
+                NamedCommands.registerCommand("Shoot", superstructure.setSHOOTINGstate());
+                NamedCommands.registerCommand("L1 Climb", superstructure.setL1_CLIMBstate());
+                NamedCommands.registerCommand("Idle", superstructure.setIDLEstate());
+                NamedCommands.registerCommand("Home", superstructure.setHOMEstate());
+        }
 
-    private void setupAutons() {
-        autonChooser.setDefaultOption(
-                "Get Off Line",
-                new RunCommand(
-                                () -> {
-                                    drivebase.zeroGyro();
-                                    drivebase.drive(new ChassisSpeeds(1.0, 0.0, 0.0));
-                                },
-                                drivebase)
-                        .withTimeout(4.0));
+        private void setupAutons() {
+                autonChooser.setDefaultOption(
+                                "Get Off Line",
+                                new RunCommand(
+                                                () -> {
+                                                        drivebase.zeroGyro();
+                                                        drivebase.drive(new ChassisSpeeds(1.0, 0.0, 0.0));
+                                                },
+                                                drivebase)
+                                                .withTimeout(4.0));
 
-        SmartDashboard.putData("Auton/Chooser", autonChooser);
-    }
+                SmartDashboard.putData("Auton/Chooser", autonChooser);
+        }
 
-    private void configureBindings() {
-        BooleanSupplier superstateMode = superstructure::isSuperstateMode;
-        BooleanSupplier manualMode = superstructure::isManualMode;
+        private void configureBindings() {
+                BooleanSupplier superstateMode = superstructure::isSuperstateMode;
+                BooleanSupplier manualMode = superstructure::isManualMode;
 
-        rumbleSubsystem.setControllers(driverController, operatorController);
+                rumbleSubsystem.setControllers(driverController, operatorController);
 
-        drivebase.setDefaultCommand(drivebase.driveFieldOriented(driveAngularVelocity));
-        superstructure.setDefaultCommand(superstructure.setIDLEstate());
+                drivebase.setDefaultCommand(drivebase.driveFieldOriented(driveAngularVelocity));
+                superstructure.setDefaultCommand(superstructure.setIDLEstate());
 
-        driverController.rightBumper()
-                .and(superstateMode)
-                .and(() -> !driverController.leftTrigger().getAsBoolean())
-                .whileTrue(superstructure.setPREPARING_SHOOTERstate());
+                driverController.rightBumper()
+                                .and(superstateMode)
+                                .and(() -> !driverController.leftTrigger().getAsBoolean())
+                                .whileTrue(superstructure.setPREPARING_SHOOTERstate());
 
-        driverController.rightTrigger()
-                .and(superstateMode)
-                .and(() -> !driverController.leftTrigger().getAsBoolean())
-                .whileTrue(superstructure.setSHOOTINGstate());
+                driverController.rightTrigger()
+                                .and(superstateMode)
+                                .and(() -> !driverController.leftTrigger().getAsBoolean())
+                                .whileTrue(superstructure.setSHOOTINGstate());
 
-        driverController.leftTrigger()
-                .and(superstateMode)
-                .and(() -> !(driverController.rightBumper().getAsBoolean()
-                        && driverController.rightTrigger().getAsBoolean()))
-                .whileTrue(superstructure.setINTAKINGstate());
+                driverController.leftTrigger()
+                                .and(superstateMode)
+                                .and(() -> !(driverController.rightBumper().getAsBoolean()
+                                                && driverController.rightTrigger().getAsBoolean()))
+                                .whileTrue(superstructure.setINTAKINGstate());
 
-        driverController.leftTrigger()
-                .and(superstateMode)
-                .and(driverController.rightBumper())
-                .whileTrue(superstructure.setPREPARING_SHOOTER_AND_INTAKINGshooting());
+                driverController.leftTrigger()
+                                .and(superstateMode)
+                                .and(driverController.rightBumper())
+                                .whileTrue(superstructure.setPREPARING_SHOOTER_AND_INTAKINGshooting());
 
-        driverController.leftTrigger()
-                .and(superstateMode)
-                .and(driverController.rightBumper())
-                .whileTrue(superstructure.setSHOOTING_AND_INTAKINGshooting());
+                driverController.leftTrigger()
+                                .and(superstateMode)
+                                .and(driverController.rightBumper())
+                                .whileTrue(superstructure.setSHOOTING_AND_INTAKINGshooting());
 
-        driverController.b()
-                .and(superstateMode)
-                .whileTrue(superstructure.setL3_CLIMBstate());
+                driverController.b()
+                                .and(superstateMode)
+                                .whileTrue(superstructure.setL3_CLIMBstate());
 
-        driverController.x()
-                .and(superstateMode)
-                .whileTrue(superstructure.setHOMEstate());
+                driverController.x()
+                                .and(superstateMode)
+                                .whileTrue(superstructure.setHOMEstate());
 
-        driverController.povRight()
-                .and(manualMode)
-                .onTrue(new InstantCommand(drivebase::zeroGyro));
+                driverController.povRight()
+                                .and(manualMode)
+                                .onTrue(new InstantCommand(drivebase::zeroGyro));
 
-        // driverController.x()
-        //         .and(manualMode)
-        //         .onTrue(superstructure.getClimberSubsystem().extendClimberHangCommand());
+                // driverController.x()
+                // .and(manualMode)
+                // .onTrue(superstructure.getClimberSubsystem().extendClimberHangCommand());
 
-        // driverController.y()
-        //         .and(manualMode)
-        //         .onTrue(superstructure.getClimberSubsystem().closeClimberGroundCommand());
+                // driverController.y()
+                // .and(manualMode)
+                // .onTrue(superstructure.getClimberSubsystem().closeClimberGroundCommand());
 
-        // driverController.b()
-        //         .and(manualMode)
-        //         .onTrue(superstructure.getClimberSubsystem().extendClimberGroundCommand());
+                // driverController.b()
+                // .and(manualMode)
+                // .onTrue(superstructure.getClimberSubsystem().extendClimberGroundCommand());
 
-        // driverController.a()
-        //         .and(manualMode)
-        //         .onTrue(superstructure.getClimberSubsystem().extendClimberHangCommand());
+                // driverController.a()
+                // .and(manualMode)
+                // .onTrue(superstructure.getClimberSubsystem().extendClimberHangCommand());
 
-        operatorController.leftTrigger()
-                .onTrue(instantCommand(
-                        superstructure.getIntakeArmSubsystem()::OpenArm))
-                .onFalse(instantCommand(
-                        superstructure.getIntakeArmSubsystem()::CloseArm));
+                driverController.leftTrigger()
+                                .onTrue(instantCommand(
+                                                superstructure.getIntakeArmSubsystem()::OpenArm))
+                                .onFalse(instantCommand(
+                                                superstructure.getIntakeArmSubsystem()::CloseArm));
 
-        operatorController.rightBumper()
-                .and(manualMode)
-                .onTrue(superstructure
-                        .getIntakeRollerSubsystem()
-                        .rollerSpinCommand(Constants.IntakeRollerConstants.kIntakePower))
-                .onFalse(superstructure
-                        .getIntakeRollerSubsystem()
-                        .rollerSpinCommand(0.0));
+                driverController.rightBumper()
+                                .and(manualMode)
+                                .onTrue(superstructure
+                                                .getIntakeRollerSubsystem()
+                                                .rollerSpinCommand(Constants.IntakeRollerConstants.kIntakePower))
+                                .onFalse(superstructure
+                                                .getIntakeRollerSubsystem()
+                                                .rollerSpinCommand(0.0));
 
-        operatorController.a()
-                .and(manualMode)
-                 .whileTrue(superstructure
-                        .getHoodSubsystem()
-                        .joystickHoodControl(() -> -operatorController.getRightY()));
+                driverController.rightTrigger()
+                                .and(manualMode)
+                                .onTrue(superstructure
+                                                .getShooterSubsystem()
+                                                .setVelocityCommand(4000))
+                                .onFalse(superstructure
+                                                .getShooterSubsystem()
+                                                .setVelocityCommand(0));
 
-        operatorController.b()
-                .and(manualMode)
-                .whileTrue(superstructure
-                        .getShooterSubsystem()
-                        .joystickShooterControl(() -> -operatorController.getLeftY()));
+                driverController.leftBumper()
+                                .and(manualMode)
+                                .onTrue(superstructure
+                                                .getFeederSubsystem()
+                                                .feederSpinCommand(12))
+                                .onFalse(superstructure
+                                                .getFeederSubsystem()
+                                                .feederSpinCommand(0));
 
-        driverController.povLeft()
-                .onTrue(superstructure.toggleControlState());
+                operatorController.a()
+                                .and(manualMode)
+                                .whileTrue(superstructure
+                                                .getHoodSubsystem()
+                                                .joystickHoodControl(() -> -operatorController.getRightY()));
 
-        operatorController.y().onTrue(superstructure.getHoodSubsystem().setHoodAngleCommand(45)).onFalse(superstructure.getHoodSubsystem().setHoodAngleCommand(0));
-    }
+                operatorController.b()
+                                .and(manualMode)
+                                .whileTrue(superstructure
+                                                .getShooterSubsystem()
+                                                .joystickShooterControl(() -> -operatorController.getLeftY()));
 
-    public Command getAutonomousCommand() {
-        return autonChooser.getSelected();
-    }
+                driverController.povLeft()
+                                .onTrue(superstructure.toggleControlState());
 
-    private static InstantCommand instantCommand(Runnable runnable) {
-        return new InstantCommand(runnable) {
-            @Override
-            public boolean runsWhenDisabled() {
-                return true;
-            }
-        };
-    }
+                operatorController.y().onTrue(superstructure.getHoodSubsystem().setHoodAngleCommand(45))
+                                .onFalse(superstructure.getHoodSubsystem().setHoodAngleCommand(0));
+        }
+
+        public Command getAutonomousCommand() {
+                return autonChooser.getSelected();
+        }
+
+        private static InstantCommand instantCommand(Runnable runnable) {
+                return new InstantCommand(runnable) {
+                        @Override
+                        public boolean runsWhenDisabled() {
+                                return true;
+                        }
+                };
+        }
 }

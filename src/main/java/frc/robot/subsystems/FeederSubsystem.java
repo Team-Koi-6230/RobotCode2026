@@ -41,11 +41,13 @@ public class FeederSubsystem extends SubsystemBase {
     
     @Override
     public void periodic() {
-        if (currentWantedState == WantedState.SHOOTING  || currentWantedState == WantedState.SHOOTING_AND_INTAKING) {
+        if (Superstructure.getInstance().isSuperstateMode()) {
+            if (currentWantedState == WantedState.SHOOTING  || currentWantedState == WantedState.SHOOTING_AND_INTAKING) {
             setVoltage(Constants.FeederConstants.kGrabPower);
         }
         else {
             setVoltage(0);
+        }
         }
     }
 
