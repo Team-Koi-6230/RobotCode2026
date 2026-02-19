@@ -6,11 +6,6 @@ import frc.robot.subsystems.Superstructure.WantedState;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.math.filter.Debouncer;
-import edu.wpi.first.math.filter.Debouncer.DebounceType;
-
-import java.util.function.DoubleSupplier;
 
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkFlex;
@@ -24,8 +19,7 @@ public class ShooterSubsystem extends SubsystemBase {
 
     public enum ShooterState {
         COAST,
-        DUTY_CYCLE_BANG_BANG,
-        TORQUE_CURRENT_BANG_BANG
+        VELOCITY_CONTROL
     }
 
     private final SparkFlex m_motor;
@@ -37,31 +31,29 @@ public class ShooterSubsystem extends SubsystemBase {
     private WantedState currentWantedState;
 
     private double targetRPM = Double.NaN;
-    private double holdAmps = Constants.ShooterConstants.kHoldAmps;
-
-    // Debouncer to prevent mode flapping
-    private final Debouncer torqueDebounce = new Debouncer(Constants.ShooterConstants.kDebouncerTime,
-            DebounceType.kFalling);
 
     public ShooterSubsystem() {
         m_motor = new SparkFlex(Constants.ShooterConstants.kMainMotorID, MotorType.kBrushless);
         encoder = m_motor.getEncoder();
-
         closedLoop = m_motor.getClosedLoopController();
 
         s_motor = new SparkFlex(Constants.ShooterConstants.kSecondaryMotorID, MotorType.kBrushless);
 
-        // Main motor config
         SparkFlexConfig m_config = new SparkFlexConfig();
         m_config.inverted(Constants.ShooterConstants.kInverted)
                 .idleMode(IdleMode.kCoast)
                 .voltageCompensation(12);
-//                .smartCurrentLimit(80);
+
+        m_config.closedLoop
+                .pid(Constants.ShooterConstants.kP, Constants.ShooterConstants.kI, Constants.ShooterConstants.kD)
+                .feedForward
+                    .kS(Constants.ShooterConstants.kS)
+                    .kV(Constants.ShooterConstants.kV)
+                    .kA(Constants.ShooterConstants.kA);
 
         m_motor.configure(m_config, com.revrobotics.ResetMode.kResetSafeParameters,
                 com.revrobotics.PersistMode.kPersistParameters);
 
-        // Secondary motor follows main
         SparkFlexConfig s_config = new SparkFlexConfig();
         s_config.follow(m_motor, true);
         s_motor.configure(s_config, com.revrobotics.ResetMode.kResetSafeParameters,
@@ -73,20 +65,18 @@ public class ShooterSubsystem extends SubsystemBase {
         if (Superstructure.getInstance().isSuperstateMode())
             handleWantedState();
 
-        System.out.println(targetRPM);
-
         if (!Double.isNaN(targetRPM)) {
             handleShootingTarget();
         } else {
             stop();
         }
 
-        // Dashboard
         SmartDashboard.putNumber("Shooter/CurrentRPM", getVelocity());
         SmartDashboard.putNumber("Shooter/TargetRPM", Double.isNaN(targetRPM) ? 0 : targetRPM);
         SmartDashboard.putString("Shooter/State", state.toString());
         SmartDashboard.putNumber("Shooter/CurrentMain", m_motor.getOutputCurrent());
         SmartDashboard.putNumber("Shooter/CurrentSecondary", s_motor.getOutputCurrent());
+        SmartDashboard.putBoolean("Shooter/AtTarget", isAtTargetVelocity());
     }
 
     private void handleWantedState() {
@@ -135,8 +125,13 @@ public class ShooterSubsystem extends SubsystemBase {
     }
 
     public boolean isReady() {
-        if (currentWantedState == WantedState.PREPARING_SHOOTER || currentWantedState == WantedState.PREPARING_SHOOTER || currentWantedState == WantedState.PREPARING_SHOOTER_AND_INTAKING || currentWantedState == WantedState.SHOOTING_AND_INTAKING)
-            return state == ShooterState.TORQUE_CURRENT_BANG_BANG;
+        if (currentWantedState == WantedState.PREPARING_SHOOTER || 
+            currentWantedState == WantedState.PREPARING_SHOOTER_AND_INTAKING || 
+            currentWantedState == WantedState.SHOOTING_AND_INTAKING ||
+            currentWantedState == WantedState.SHOOTING) {
+            
+            return state == ShooterState.VELOCITY_CONTROL && isAtTargetVelocity();
+        }
         return state == ShooterState.COAST;
     }
 
@@ -163,24 +158,8 @@ public class ShooterSubsystem extends SubsystemBase {
     }
 
     private void handleShootingTarget() {
-        boolean inTolerance = isAtTargetVelocity();
-        boolean useTorque = torqueDebounce.calculate(inTolerance);
-
-        if (useTorque) {
-            // Torque/current mode
-            closedLoop.setSetpoint(holdAmps, ControlType.kCurrent);
-            state = ShooterState.TORQUE_CURRENT_BANG_BANG;
-        } else {
-            // Bang-bang open loop
-            System.out.println(targetRPM < getVelocity());
-            System.out.println(getVelocity());
-            if (targetRPM > getVelocity()) {
-                closedLoop.setSetpoint(12, ControlType.kVoltage);
-            } else {
-                closedLoop.setSetpoint(0, ControlType.kVoltage);  
-            }
-            state = ShooterState.DUTY_CYCLE_BANG_BANG;
-        }
+        closedLoop.setSetpoint(targetRPM, ControlType.kVelocity);
+        state = ShooterState.VELOCITY_CONTROL;
     }
 
     public void stop() {
@@ -191,27 +170,6 @@ public class ShooterSubsystem extends SubsystemBase {
 
     public Command setVelocityCommand(double setpoint) {
         return runOnce(() -> setTargetRPM(setpoint));
-    }
-
-    public Command joystickShooterControl(DoubleSupplier axis) {
-        return run(() -> {
-            double input = MathUtil.applyDeadband(axis.getAsDouble(), 0.08);
-
-            // Square input for finer low-end control
-            input = Math.copySign(input * input, input);
-
-            // Stick back or centered = stop shooter
-            if (input <= 0.0) {
-                setTargetRPM(0);
-                return;
-            }
-
-            double minRPM = 0;
-            double maxRPM = 3000;
-
-            double target = minRPM + input * (maxRPM - minRPM);
-            setTargetRPM(target);
-        });
     }
 
     @Override

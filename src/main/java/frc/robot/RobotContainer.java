@@ -178,12 +178,6 @@ public class RobotContainer {
                                                 .getHoodSubsystem()
                                                 .joystickHoodControl(() -> -operatorController.getRightY()));
 
-                operatorController.b()
-                                .and(manualMode)
-                                .whileTrue(superstructure
-                                                .getShooterSubsystem()
-                                                .joystickShooterControl(() -> -operatorController.getLeftY()));
-
                 driverController.povLeft()
                                 .onTrue(superstructure.toggleControlState());
 
