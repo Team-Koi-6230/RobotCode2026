@@ -158,7 +158,7 @@ public class RobotContainer {
                                 .and(manualMode)
                                 .onTrue(superstructure
                                                 .getShooterSubsystem()
-                                                .setVelocityCommand(4000))
+                                                .setVelocityCommand(6000))
                                 .onFalse(superstructure
                                                 .getShooterSubsystem()
                                                 .setVelocityCommand(0));
