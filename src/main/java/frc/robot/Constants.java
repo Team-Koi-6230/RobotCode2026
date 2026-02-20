@@ -155,6 +155,15 @@ public final class Constants {
     public static final double kIntakePower = 10;
 
     public static final RumblePack kIntakeReadyRumble = new RumblePack(0.3, 0.2, Priority.LOW);
+
+    public static final double kP = 0,
+        kI = 0,
+        kD = 0,
+        kS = 0,
+        kV = 0,
+        kA = 0;
+
+        public static final double kGearRatio = 0;
   }
 
   public static class FeederConstants {
