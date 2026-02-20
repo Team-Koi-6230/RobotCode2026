@@ -9,7 +9,6 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
-import frc.robot.subsystems.IntakeRollerSubsytem.IntakeRollerState;
 import frc.robot.subsystems.Superstructure.WantedState;
 
 public class FeederSubsystem extends SubsystemBase {
@@ -35,7 +34,11 @@ public class FeederSubsystem extends SubsystemBase {
         SparkMaxConfig m_config = new SparkMaxConfig();
 
         m_config.closedLoop
-                .pid(Constants.FeederConstants.kP, Constants.FeederConstants.kI, Constants.FeederConstants.kD);
+                .pid(Constants.FeederConstants.kP, Constants.FeederConstants.kI,
+                        Constants.FeederConstants.kD).feedForward
+                .kS(Constants.FeederConstants.kS)
+                .kV(Constants.FeederConstants.kV)
+                .kA(Constants.FeederConstants.kA);
     }
 
     public Command feederSpinCommand(double rpm) {
@@ -62,7 +65,7 @@ public class FeederSubsystem extends SubsystemBase {
     public void periodic() {
         if (Superstructure.getInstance().isSuperstateMode()) {
             if (currentWantedState == WantedState.SHOOTING || currentWantedState == WantedState.SHOOTING_AND_INTAKING) {
-                setTargetRpm(Constants.FeederConstants.kGrabPower);
+                setTargetRpm(Constants.FeederConstants.kGrabRpm);
             } else {
                 setTargetRpm(0);
             }
