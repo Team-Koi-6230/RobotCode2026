@@ -44,8 +44,8 @@ public class IntakeRollerSubsytem extends SubsystemBase {
                     .kV(Constants.IntakeRollerConstants.kV)
                     .kA(Constants.IntakeRollerConstants.kA);
 
-        m_config.encoder.positionConversionFactor(IntakeArmConstants.kGearRatio)
-                .velocityConversionFactor(1 / IntakeArmConstants.kGearRatio);
+        m_config.encoder.positionConversionFactor(Constants.IntakeRollerConstants.kGearRatio)
+                .velocityConversionFactor(1 / Constants.IntakeRollerConstants.kGearRatio);
 
         m_motor.configure(m_config, com.revrobotics.ResetMode.kResetSafeParameters,
                 com.revrobotics.PersistMode.kPersistParameters);
