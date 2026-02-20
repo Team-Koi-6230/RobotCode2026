@@ -48,11 +48,11 @@ public final class Constants {
 
     public static final boolean kInverted = true;
 
-    public static final double kP = 0,
+    public static final double kP = 0.00008,
         kI = 0,
         kD = 0,
-        kS = 0,
-        kV = 0,
+        kS = 0.01,
+        kV = 0.0018,
         kA = 0;
 
     public static final double kNeutralZoneShootingRPM = 1000;
@@ -140,7 +140,7 @@ public final class Constants {
 
     public static final double kTolerance = 1;
 
-    public static final int kOpenAngle = 320; // 320
+    public static final int kOpenAngle = 340;
     public static final int kClosedAngle = 20;
 
     public static final double kShakeDelay = 0.3;
