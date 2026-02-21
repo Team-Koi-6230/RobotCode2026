@@ -123,32 +123,34 @@ public final class Constants {
     public static final int kAbsoluteEncoderID = 0;
     public static final int kMotorID = 15;
 
-    public static final double kP = 0.25;
+    public static final double kP = 0;
     public static final double kI = 0;
-    public static final double kD = 0.26;
+    public static final double kD = 0;
 
-    public static final double kS = 0.03;
-    public static final double kV = 0.05;
-    public static final double kA = 0.004;
-    public static final double kG = 0.38;
+    public static final double kS = 0;
+    public static final double kV = 0;
+    public static final double kA = 0;
+    public static final double kG = 0;
     public static final double kCosRatio = 1;
-    public static final double kMaxAcceleration = 1000;
-    public static final double kCruiseVelocity = 3000;
+    public static final double kMaxAcceleration = 120;
+    public static final double kCruiseVelocity = 360;
 
-    public static final double kGearRatio = 15;
+    public static final double kGearRatio = 25;
 
     public static final int kAbsoluteEncoderRange = 360;
-    public static final int kAbsoluteEncoderOffset = 30;
+    public static final int kAbsoluteEncoderOffset = 0;
 
     public static final double kTolerance = 1;
 
-    public static final int kOpenAngle = 340;
+    public static final int kOpenAngle = 180;
     public static final int kClosedAngle = 20;
 
     public static final double kShakeDelay = 0.3;
     public static final double kShakeMax = 40;
     public static final double kShakeMin = 10;
 
+    public static final double kForwardSoftLimit = 340;
+    public static final double kReverseSoftLimit = 40;
   }
 
   public static class IntakeRollerConstants {

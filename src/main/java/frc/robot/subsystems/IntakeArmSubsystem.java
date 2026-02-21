@@ -10,6 +10,7 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 import com.revrobotics.spark.config.MAXMotionConfig.MAXMotionPositionMode;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -48,7 +49,12 @@ public class IntakeArmSubsystem extends SubsystemBase {
 
         SparkMaxConfig config = new SparkMaxConfig();
 
-        config.smartCurrentLimit(20);
+        config.smartCurrentLimit(20)
+            .softLimit
+            .forwardSoftLimit(IntakeArmConstants.kForwardSoftLimit)
+            .forwardSoftLimitEnabled(true)
+            .reverseSoftLimit(IntakeArmConstants.kReverseSoftLimit)
+            .reverseSoftLimitEnabled(true);
 
         config.closedLoop
                 .pid(IntakeArmConstants.kP, IntakeArmConstants.kI, IntakeArmConstants.kD).feedForward
@@ -58,22 +64,37 @@ public class IntakeArmSubsystem extends SubsystemBase {
                 .kCos(IntakeArmConstants.kG)
                 .kCosRatio(IntakeArmConstants.kCosRatio);
 
+        
+
         config.closedLoop.maxMotion
                 .maxAcceleration(IntakeArmConstants.kMaxAcceleration)
                 .allowedProfileError(IntakeArmConstants.kTolerance)
                 .cruiseVelocity(IntakeArmConstants.kCruiseVelocity)
                 .positionMode(MAXMotionPositionMode.kMAXMotionTrapezoidal);
 
-        config.encoder.positionConversionFactor(IntakeArmConstants.kGearRatio)
-                .velocityConversionFactor(1 / IntakeArmConstants.kGearRatio);
+        config.encoder.positionConversionFactor(360.0 / IntakeArmConstants.kGearRatio)
+                .velocityConversionFactor((360.0 / IntakeArmConstants.kGearRatio) / 60.0);
 
         m_motor.configure(config, ResetMode.kNoResetSafeParameters, PersistMode.kNoPersistParameters);
         m_controller = m_motor.getClosedLoopController();
 
         // Initial sync so we aren't starting at zero
         m_relativeEncoder.setPosition(m_absoluteEncoder.get());
+
+        tuningInit();
     }
 
+    private void tuningInit() {
+    SmartDashboard.putNumber("Arm/kP", IntakeArmConstants.kP);
+    SmartDashboard.putNumber("Arm/kI", IntakeArmConstants.kI);
+    SmartDashboard.putNumber("Arm/kD", IntakeArmConstants.kD);
+
+    SmartDashboard.putNumber("Arm/kS", IntakeArmConstants.kS);
+    SmartDashboard.putNumber("Arm/kV", IntakeArmConstants.kV);
+    SmartDashboard.putNumber("Arm/kA", IntakeArmConstants.kA);
+    SmartDashboard.putNumber("Arm/kG", IntakeArmConstants.kG);
+    SmartDashboard.putNumber("Arm/kCosRatio", IntakeArmConstants.kCosRatio);
+}
     @Override
     public void periodic() {
         tuning();
@@ -191,6 +212,8 @@ public class IntakeArmSubsystem extends SubsystemBase {
     }
 
     private void tuning() {
+        if (!DriverStation.isTest()) return;
+
         SmartDashboard.putBoolean("Arm/Is dutycycle encoder connected", m_absoluteEncoder.isConnected());
         SmartDashboard.putNumber("Arm/Abs encoder angle", m_absoluteEncoder.get());
         SmartDashboard.putNumber("Arm/Rel encoder angle", getAngle());
@@ -229,7 +252,7 @@ public class IntakeArmSubsystem extends SubsystemBase {
             // Apply changes without a hard reset
             m_motor.configure(tuneConfig,
                     ResetMode.kNoResetSafeParameters,
-                    PersistMode.kNoPersistParameters);
+                    PersistMode.kPersistParameters);
 
         }
 
