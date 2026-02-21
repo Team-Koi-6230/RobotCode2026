@@ -10,17 +10,19 @@ import frc.robot.utils.LimelightHelpers.PoseEstimate;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 
 public class Vision {
-    private static Vision _instance;    
+    private static Vision _instance;
+
     public static Vision getInstance() {
         if (_instance == null) {
             _instance = new Vision();
         }
         return _instance;
     }
-    
+
     private final String _limelightName;
     private Pose2d currentPosition;
 
@@ -32,27 +34,32 @@ public class Vision {
     public boolean updatePoseEstimation(SwerveDrive swerveDrive) {
         double robotYaw = swerveDrive.getYaw().getDegrees();
         LimelightHelpers.SetRobotOrientation(_limelightName, robotYaw, 0.0, 0.0, 0.0, 0.0, 0.0);
-    
-        PoseEstimate est = null;
-        if (DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue) {
-            est = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(_limelightName);
-        } else {
-            est = LimelightHelpers.getBotPoseEstimate_wpiRed_MegaTag2(_limelightName);
+
+        boolean isBlue = DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Blue;
+
+        PoseEstimate mt1 = isBlue ? LimelightHelpers.getBotPoseEstimate_wpiBlue(_limelightName)
+                : LimelightHelpers.getBotPoseEstimate_wpiRed(_limelightName);
+        PoseEstimate mt2 = isBlue ? LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(_limelightName)
+                : LimelightHelpers.getBotPoseEstimate_wpiRed_MegaTag2(_limelightName);
+
+        if (mt2 == null || mt2.tagCount < 1)
+            return false;
+
+        Rotation2d betterRotation = mt2.pose.getRotation();
+        if (mt1 != null && mt1.tagCount >= 2) {
+            betterRotation = mt1.pose.getRotation();
         }
 
-        currentPosition = swerveDrive.getPose();
+        Pose2d fusedPose = new Pose2d(mt2.pose.getTranslation(), betterRotation);
 
-        if (est == null) return false;
-        if (est.tagCount < 1) return false;
-        if (est.pose == null) return false;
+        swerveDrive.addVisionMeasurement(fusedPose, mt2.timestampSeconds);
 
-        swerveDrive.addVisionMeasurement(est.pose,est.timestampSeconds);
-        currentPosition = swerveDrive.getPose();
-        
         return true;
     }
 
-    public Pose2d getPosition() {return currentPosition;}
+    public Pose2d getPosition() {
+        return currentPosition;
+    }
 
     public boolean isInAllianceZone() {
         var x = AllianceFlipUtil.applyX(currentPosition.getX());
