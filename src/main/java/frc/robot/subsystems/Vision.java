@@ -28,7 +28,7 @@ public class Vision {
 
     private Vision() {
         _limelightName = Constants.VisionConstants.kLimelightName;
-        currentPosition = new Pose2d();
+        currentPosition = new Pose2d(); 
     }
 
     public boolean updatePoseEstimation(SwerveDrive swerveDrive) {

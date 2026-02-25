@@ -119,7 +119,7 @@ public final class Constants {
     public static final int kServoMin = 0;
     public static final int kServoMax = 180;
     public static final int kStartingPos = 0;
-    public static final double kServoDelay = 0.1;
+    public static final double kServoDelay = 0.04;
 
     public static final double kAllianceAngle = 0.0;
   }
