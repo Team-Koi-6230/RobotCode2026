@@ -182,7 +182,7 @@ public final class Constants {
 
     public static final double kGrabRpm = 1000;
 
-    public static final int kStallLimit = 40;
+    public static final int kStallLimit = 60;
 
     public static final double kGearRatio = 4;
 

@@ -190,7 +190,7 @@ public class RobotContainer {
 
         public Command getAutonomousCommand() {
                 // return autonChooser.getSelected();
-                return drivebase.sysIdDriveMotorCommand();
+                return drivebase.sysIdAngleMotorCommand();
         }
 
         private static InstantCommand instantCommand(Runnable runnable) {
