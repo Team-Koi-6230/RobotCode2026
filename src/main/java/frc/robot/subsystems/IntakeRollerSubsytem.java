@@ -155,8 +155,6 @@ public class IntakeRollerSubsytem extends SubsystemBase {
 
             System.out.println("Roller: Tuned in new values! 🌪️");
         }
-
-        var debugRPM = SmartDashboard.getNumber("Intake/DebugTargetRPM", 0.0);
     }
 
     @Override
