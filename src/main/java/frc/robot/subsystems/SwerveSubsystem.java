@@ -169,8 +169,9 @@ public class SwerveSubsystem extends SubsystemBase {
     public void periodic() {
         if (!visionDriveTest)
             return;
-
         swerveDrive.updateOdometry();
+
+        SmartDashboard.putNumber("SwerveVision/HubDist", vision.getDistanceToHub().getNorm());
 
         double now = edu.wpi.first.wpilibj.Timer.getFPGATimestamp();
         if (now - lastVisionTime >= Constants.SwerveDriveConstants.kVisionPeriod) {
