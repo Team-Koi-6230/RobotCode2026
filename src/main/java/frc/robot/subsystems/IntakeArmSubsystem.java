@@ -27,10 +27,11 @@ public class IntakeArmSubsystem extends SubsystemBase {
     private double targetAngle;
     private double _lastTargetAngle;
     private int syncCounter = 0; // To avoid syncing every single frame
-    private int targetStep;
+    private int currentStep;
+    private double targetDistance;
 
     public enum IntakeArmState {
-        IDLE, OPEN, CLOSED, MOVING, STEP0, STEP1, STEP2, STEP3
+        IDLE, OPEN, CLOSED, MOVING, SHAKE
     }
 
     public IntakeArmState state = IntakeArmState.IDLE;
@@ -40,7 +41,7 @@ public class IntakeArmSubsystem extends SubsystemBase {
     private double lastP, lastI, lastD, lastS, lastV, lastA, lastG, lastCosRatio, lastMaxVel, lastMaxAccel;
 
     public IntakeArmSubsystem() {
-        targetStep = 1;
+        currentStep = 1;
 
         m_absoluteEncoder = new DutyCycleEncoder(
                 IntakeArmConstants.kAbsoluteEncoderID,
@@ -124,6 +125,11 @@ public class IntakeArmSubsystem extends SubsystemBase {
             m_relativeEncoder.setPosition(m_absoluteEncoder.get());
             _lastTargetAngle = targetAngle;
         }
+        
+        // reset the current step counter when not shaking
+        if (state != IntakeArmState.SHAKE) {
+            currentStep = 1;
+        }
     }
 
     /**
@@ -155,14 +161,8 @@ public class IntakeArmSubsystem extends SubsystemBase {
             state = IntakeArmState.OPEN;
         } else if (isClosed()) {
             state = IntakeArmState.CLOSED;
-        } else if (isStep0()) {
-            state = IntakeArmState.STEP0;
-        }else if (isStep1()) {
-            state = IntakeArmState.STEP1;
-        }else if (isStep2()) {
-            state = IntakeArmState.STEP2;
-        } else if (isStep3()) {
-            state = IntakeArmState.STEP3;
+        } else if (currentWantedState == WantedState.SHOOTING) {
+            state = IntakeArmState.SHAKE;
         } else {
             state = IntakeArmState.MOVING;
         }
@@ -187,20 +187,12 @@ public class IntakeArmSubsystem extends SubsystemBase {
         return Math.abs(IntakeArmConstants.kClosedAngle - getAngle()) < IntakeArmConstants.kTolerance;
     }
 
-    private boolean isStep0() {
-        return  Math.abs(IntakeArmConstants.kStep0 - getAngle()) < IntakeArmConstants.kTolerance;
+    private boolean isAtMaxShake() {
+        return Math.abs(IntakeArmConstants.kShakeMax - getAngle()) < IntakeArmConstants.kTolerance;
     }
-    
-    private boolean isStep1() {
-        return Math.abs(IntakeArmConstants.kStep1 - getAngle()) < IntakeArmConstants.kTolerance;
-    }
-    
-    private boolean isStep2() {
-        return Math.abs(IntakeArmConstants.kStep2 - getAngle()) < IntakeArmConstants.kTolerance;
-    }
-    
-    private boolean isStep3() {
-        return Math.abs(IntakeArmConstants.kStep3 - getAngle()) < IntakeArmConstants.kTolerance;
+
+    private boolean isAtTarget(){
+        return Math.abs(targetAngle - getAngle()) < IntakeArmConstants.kTolerance;
     }
 
     public void OpenArm() {
@@ -234,30 +226,21 @@ public class IntakeArmSubsystem extends SubsystemBase {
     }
 
     private void handleArmShake() {
-        switch (state) {
-            case STEP0:
-            case OPEN:
-                if (targetStep == 1) setAngle(IntakeArmConstants.kStep1);
-                else if (targetStep == 2) setAngle(IntakeArmConstants.kStep2);
-                else if (targetStep == 3) setAngle(IntakeArmConstants.kStep3);
-                break;
-            
-            case STEP1:
-                targetStep = 2;
-                setAngle(IntakeArmConstants.kStep0);
-                break;
+        if (isAtMaxShake() || isOpen()) {
+            targetDistance = IntakeArmConstants.kShakeMax + (IntakeArmConstants.KStepDistance * currentStep);
 
-            case STEP2:
-                targetStep = 3;
-                setAngle(IntakeArmConstants.kStep0);
-                break;
+            if (targetDistance > IntakeArmConstants.kShakeMin) {
+                currentStep = 1;
+                targetDistance = IntakeArmConstants.kShakeMax + (IntakeArmConstants.KStepDistance * currentStep);
+            }
 
-            case STEP3:
-            case CLOSED:
-                targetStep = 1;
-                setAngle(IntakeArmConstants.kStep0);
-                break;
+            setAngle(targetDistance);
         }
+        else if (isAtTarget()) {
+            setAngle(IntakeArmConstants.kShakeMax);
+            currentStep += 1;
+        }
+        
     }
 
     private void tuning() {
