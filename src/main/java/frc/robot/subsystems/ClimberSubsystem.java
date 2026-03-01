@@ -24,16 +24,6 @@ public class ClimberSubsystem extends SubsystemBase {
     MOVING_HANG,
     AT_TARGET_HANG
   }
-  public enum L3ClimbJourney {
-    NONE,
-    L1Open,
-    L1Closed,
-    L2Open,
-    L2Closed,
-    L3Open,
-    L3Closed
-  }
-  private L3ClimbJourney L3Journey;
   private double targetHeight = 0.0;
   private ClimberState state = ClimberState.MOVING_GROUND;
   private WantedState currentWantedState;
@@ -153,44 +143,6 @@ public class ClimberSubsystem extends SubsystemBase {
       setPositionHang(Constants.ClimberConstants.kL1CloseHeight);
     }
   }
-  private void HandleL3()
-  {
-    switch (L3Journey) {
-      case NONE:
-      setPositionGround(Constants.ClimberConstants.kL1ExtendHeight);
-      break;
-      case L1Open:
-      setPositionHang(Constants.ClimberConstants.kL1CloseHeight);
-      break;
-      case L1Closed:
-      setPositionHang(Constants.ClimberConstants.kL2ExtendHeight);
-      break;
-      case L2Open:
-      setPositionHang(Constants.ClimberConstants.kL2CloseHeight);
-      break;
-      case L3Closed:
-      setPositionHang(Constants.ClimberConstants.kL3ExtendHeight);
-      break;
-      default:
-        break;
-    }
-    if(L3Journey==L3ClimbJourney.NONE||L3Journey==L3ClimbJourney.L1Closed||L3Journey==L3ClimbJourney.L2Closed)
-    {
-      if(state==ClimberState.AT_TARGET_GROUND)
-      {
-        L3Journey = L3ClimbJourney.values()[L3Journey.ordinal() + 1];
-      }
-    }
-    if(L3Journey==L3ClimbJourney.L1Open||L3Journey==L3ClimbJourney.L2Open||L3Journey==L3ClimbJourney.L3Open)
-    {
-      if(state==ClimberState.AT_TARGET_GROUND)
-      {
-        L3Journey = L3ClimbJourney.values()[L3Journey.ordinal() + 1];
-      }
-    }
-    
-  }
-
   private void handleState() {
     switch (currentWantedState) {
       case IDLE:
@@ -204,7 +156,6 @@ public class ClimberSubsystem extends SubsystemBase {
         break;
     }
   }
-
   private void motorLogic() {
     if (isGrounded) {
       closedLoop.setSetpoint(targetHeight, ControlType.kPosition, ClosedLoopSlot.kSlot0);
