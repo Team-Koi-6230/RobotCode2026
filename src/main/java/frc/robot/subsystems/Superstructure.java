@@ -45,7 +45,8 @@ public class Superstructure extends SubsystemBase {
         L1_EXTEND_TELEOP,
         L1_CLOSE_TELEOP,
         L1_EXTEND_AUTON,
-        L1_CLOSE_AUTON
+        L1_CLOSE_AUTON,
+        UNJAM
     }
 
     public enum CurrentState {
@@ -59,7 +60,8 @@ public class Superstructure extends SubsystemBase {
         L1_EXTEND_TELEOP,
         L1_CLOSE_TELEOP,
         L1_EXTEND_AUTON,
-        L1_CLOSE_AUTON
+        L1_CLOSE_AUTON,
+        UNJAM
     }
 
     public enum RobotControlState {
@@ -231,7 +233,9 @@ public class Superstructure extends SubsystemBase {
     }
 
     
-
+    public Command setUNJAMstate() {
+        return run(() -> setWantedState(WantedState.UNJAM));
+    }
 
 
     public Command autonClimb() {

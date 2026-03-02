@@ -121,6 +121,8 @@ public void periodic() {
             case SHOOTING:
                 handleShooting();
                 break;
+            case UNJAM:
+                setTargetRPM(Constants.ShooterConstants.kUnjamPower);
         }
     }
 

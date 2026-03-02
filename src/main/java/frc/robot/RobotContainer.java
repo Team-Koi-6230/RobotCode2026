@@ -111,6 +111,9 @@ public class RobotContainer {
                 driverController.x().and(superstateMode)
                                 .whileTrue(superstructure.setHOMEstate());
 
+                driverController.povUp().and(superstateMode)
+                                .onTrue(superstructure.setUNJAMstate());
+
                 ////////////////////////////////////////////////////////////////////
 
                 driverController.povRight()
@@ -147,6 +150,7 @@ public class RobotContainer {
                                 .onFalse(superstructure
                                                 .getIntakeRollerSubsystem()
                                                 .rollerSpinCommand(0.0));
+
 
                 driverController.rightTrigger()
                                 .and(manualMode)

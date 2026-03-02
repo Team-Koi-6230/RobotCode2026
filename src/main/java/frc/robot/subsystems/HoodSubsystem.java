@@ -142,6 +142,7 @@ public void setAngle(double degrees) {
             case IDLE:
             case HOME:
             case INTAKING:
+            case UNJAM:
             case L1_CLOSE_AUTON:
             case L1_CLOSE_TELEOP:
             case L1_EXTEND_AUTON:

@@ -111,6 +111,8 @@ public final class Constants {
     public static final double kMeaningfullVelocity = 0.5;
 
     public static final RumblePack kRumbleScoreReady = new RumblePack(0.3, 0.2, Priority.MEDIUM);
+
+    public static final double kUnjamPower = -2000;
   }
 
   public static class HoodConstants {

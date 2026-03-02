@@ -216,6 +216,7 @@ public class IntakeArmSubsystem extends SubsystemBase {
                 break;
             case PREPARING_SHOOTER_AND_INTAKING:
             case SHOOTING_AND_INTAKING:
+            case UNJAM:
             case INTAKING:
                 OpenArm();
                 break;

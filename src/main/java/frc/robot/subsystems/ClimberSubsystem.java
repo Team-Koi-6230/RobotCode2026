@@ -221,6 +221,7 @@ public class ClimberSubsystem extends SubsystemBase {
       switch (currentWantedState) {
         case IDLE:
         case HOME:
+        case UNJAM:
         case SHOOTING:
         case PREPARING_SHOOTER:
         case PREPARING_SHOOTER_AND_INTAKING:

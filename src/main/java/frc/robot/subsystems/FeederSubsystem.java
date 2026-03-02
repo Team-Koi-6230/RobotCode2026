@@ -94,6 +94,8 @@ public class FeederSubsystem extends SubsystemBase {
         if (Superstructure.getInstance().isSuperstateMode()) {
             if (currentWantedState == WantedState.SHOOTING || currentWantedState == WantedState.SHOOTING_AND_INTAKING) {
                 setTargetRpm(Constants.FeederConstants.kGrabRpm);
+            } else if(currentWantedState == WantedState.UNJAM) {
+                setTargetRpm(-Constants.FeederConstants.kGrabRpm);
             } else {
                 setTargetRpm(0);
             }
@@ -158,7 +160,7 @@ public class FeederSubsystem extends SubsystemBase {
     }
 
     public boolean isReady() {
-        if (currentWantedState != WantedState.SHOOTING || currentWantedState == WantedState.SHOOTING_AND_INTAKING) {
+        if (currentWantedState != WantedState.SHOOTING || currentWantedState == WantedState.SHOOTING_AND_INTAKING || currentWantedState != WantedState.UNJAM) {
             return state == FeederState.IDLE;
         }
         return state == FeederState.SPINNING;
