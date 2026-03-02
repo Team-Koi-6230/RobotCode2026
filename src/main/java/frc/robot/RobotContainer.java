@@ -43,9 +43,9 @@ public class RobotContainer {
 
                 driveAngularVelocity = SwerveInputStream.of(
                                 drivebase.getSwerveDrive(),
-                                () -> driverController.getLeftY(),
-                                () -> driverController.getLeftX())
-                                .withControllerRotationAxis(() -> driverController.getRightX())
+                                () -> -driverController.getLeftY(),
+                                () -> -driverController.getLeftX())
+                                .withControllerRotationAxis(() -> -driverController.getRightX())
                                 .deadband(OperatorConstants.kDeadband)
                                 .scaleTranslation(1.0)
                                 .allianceRelativeControl(true);
@@ -181,14 +181,16 @@ public class RobotContainer {
                                 .onTrue(superstructure.getFeederSubsystem().feederSpinCommand(-1500))
                                 .onFalse(superstructure.getFeederSubsystem().feederSpinCommand(0));
 
-                driverController.povLeft()
-                                .onTrue(superstructure.toggleControlState());
-
+                
                 operatorController.y().onTrue(superstructure.getHoodSubsystem().setHoodAngleCommand(45))
                                 .onFalse(superstructure.getHoodSubsystem().setHoodAngleCommand(0));
 
                 driverController.y().onTrue(superstructure.getHoodSubsystem().setHoodAngleCommand(0))
                                 .onFalse(superstructure.getHoodSubsystem().setHoodAngleCommand(40));
+
+                driverController.povLeft()
+                                .onTrue(superstructure.toggleControlState());
+
         }
 
         public Command getAutonomousCommand() {

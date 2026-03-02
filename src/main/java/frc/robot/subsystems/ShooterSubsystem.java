@@ -1,6 +1,7 @@
 package frc.robot.subsystems;
 
 import frc.robot.Constants;
+import frc.robot.Constants.ShooterConstants;
 import frc.robot.subsystems.Superstructure.WantedState;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -29,75 +30,66 @@ public class ShooterSubsystem extends SubsystemBase {
 
     private ShooterState state = ShooterState.COAST;
     private WantedState currentWantedState;
-
     private double targetRPM = Double.NaN;
 
+    private SwerveSubsystem swerveSubsystem;
+
     public ShooterSubsystem() {
-        m_motor = new SparkFlex(Constants.ShooterConstants.kMainMotorID, MotorType.kBrushless);
+        m_motor = new SparkFlex(ShooterConstants.kMainMotorID, MotorType.kBrushless);
         encoder = m_motor.getEncoder();
         closedLoop = m_motor.getClosedLoopController();
-
-        s_motor = new SparkFlex(Constants.ShooterConstants.kSecondaryMotorID, MotorType.kBrushless);
+        s_motor = new SparkFlex(ShooterConstants.kSecondaryMotorID, MotorType.kBrushless);
 
         SparkFlexConfig m_config = new SparkFlexConfig();
-        m_config.inverted(Constants.ShooterConstants.kInverted)
+        m_config.inverted(ShooterConstants.kInverted)
                 .idleMode(IdleMode.kCoast)
                 .voltageCompensation(12);
 
         m_config.closedLoop
-                .pid(Constants.ShooterConstants.kP, Constants.ShooterConstants.kI,
-                        Constants.ShooterConstants.kD).feedForward
-                .kS(Constants.ShooterConstants.kS)
-                .kV(Constants.ShooterConstants.kV)
-                .kA(Constants.ShooterConstants.kA);
+                .pid(ShooterConstants.kP,
+                        ShooterConstants.kI,
+                        ShooterConstants.kD).feedForward
+                .kS(ShooterConstants.kS)
+                .kV(ShooterConstants.kV)
+                .kA(ShooterConstants.kA);
 
-        m_config.smartCurrentLimit(Constants.ShooterConstants.kStallLimit);
+        m_config.smartCurrentLimit(ShooterConstants.kStallLimit);
 
-        m_motor.configure(m_config, com.revrobotics.ResetMode.kResetSafeParameters,
+        m_motor.configure(m_config,
+                com.revrobotics.ResetMode.kResetSafeParameters,
                 com.revrobotics.PersistMode.kPersistParameters);
 
         SparkFlexConfig s_config = new SparkFlexConfig();
         s_config.follow(m_motor, true);
-        s_motor.configure(s_config, com.revrobotics.ResetMode.kResetSafeParameters,
+        s_motor.configure(s_config,
+                com.revrobotics.ResetMode.kResetSafeParameters,
                 com.revrobotics.PersistMode.kPersistParameters);
 
-        SmartDashboard.putNumber("Shooter/Debug RPM", targetRPM);
+        SmartDashboard.putNumber("Shooter/Debug RPM", 0);
     }
 
-@Override
-public void periodic() {
-    tuning();
-    if (DriverStation.isTest()) return;
-
-    if (Superstructure.getInstance().isSuperstateMode()) {
-        handleWantedState();
+    public void setSwerveSubsystem(SwerveSubsystem swerve) {
+        this.swerveSubsystem = swerve;
     }
 
-    if (!Double.isNaN(targetRPM) && targetRPM > 0) {
-        handleShootingTarget();
-    } else {
-        m_motor.stopMotor();
-        state = ShooterState.COAST;
-    }
-}
+    @Override
+    public void periodic() {
+        publishTelemetry();
 
-    private void tuning() {
-        if (!DriverStation.isTest()) return;
-        SmartDashboard.putNumber("Shooter/CurrentRPM", getVelocity());
-        SmartDashboard.putNumber("Shooter/TargetRPM", Double.isNaN(targetRPM) ? 0 : targetRPM);
-        SmartDashboard.putString("Shooter/State", state.toString());
-        SmartDashboard.putNumber("Shooter/CurrentMain", m_motor.getOutputCurrent());
-        SmartDashboard.putNumber("Shooter/CurrentSecondary", s_motor.getOutputCurrent());
-        SmartDashboard.putBoolean("Shooter/AtTarget", isAtTargetVelocity());
+        if (DriverStation.isTest()) {
+            runTuningMode();
+            return;
+        }
 
-        double debugRPM = SmartDashboard.getNumber("Shooter/Debug RPM", 0);
-        targetRPM = debugRPM;
-        if (debugRPM == 0) {
+        if (Superstructure.getInstance().isSuperstateMode()) {
+            handleWantedState();
+        }
+
+        if (!Double.isNaN(targetRPM) && targetRPM > 0) {
+            handleShootingTarget();
+        } else {
             m_motor.stopMotor();
             state = ShooterState.COAST;
-        } else {
-            closedLoop.setSetpoint(debugRPM, ControlType.kVelocity);
-            state = ShooterState.VELOCITY_CONTROL;
         }
     }
 
@@ -123,6 +115,7 @@ public void periodic() {
                 break;
             case UNJAM:
                 setTargetRPM(Constants.ShooterConstants.kUnjamPower);
+                break;
         }
     }
 
@@ -134,12 +127,53 @@ public void periodic() {
         }
     }
 
+    /**
+     * Computes shot RPM using Vision's compensated flywheel speed.
+     *
+     * Replaces the flat Superstructure.getShooterParameters().flywheelSpeed() call.
+     * Now uses kShotFlywheelSpeedMap (distance lookup) + kRadialRPMComp (velocity
+     * compensation that was always in Constants but never wired in until now).
+     *
+     * Falls back to Superstructure parameter if swerveSubsystem not yet set.
+     */
     private void score() {
-        setTargetRPM(Superstructure.getInstance().getShooterParameters().flywheelSpeed());
+        if (swerveSubsystem != null) {
+            setTargetRPM(Vision.getInstance()
+                    .getCompensatedFlywheelRPM());
+        } else {
+            setTargetRPM(ShooterConstants.kMaxRPM);
+        }
     }
 
     private void shootToAllianceZone() {
         setTargetRPM(Constants.ShooterConstants.kNeutralZoneShootingRPM);
+    }
+
+    private void handleShootingTarget() {
+        closedLoop.setSetpoint(targetRPM, ControlType.kVelocity);
+        state = ShooterState.VELOCITY_CONTROL;
+    }
+
+    private void runTuningMode() {
+        double debugRPM = SmartDashboard.getNumber("Shooter/Debug RPM", 0);
+        targetRPM = debugRPM;
+        if (debugRPM == 0) {
+            m_motor.stopMotor();
+            state = ShooterState.COAST;
+        } else {
+            closedLoop.setSetpoint(debugRPM, ControlType.kVelocity);
+            state = ShooterState.VELOCITY_CONTROL;
+        }
+    }
+
+    private void publishTelemetry() {
+        SmartDashboard.putNumber("Shooter/CurrentRPM", getVelocity());
+        SmartDashboard.putNumber("Shooter/TargetRPM", Double.isNaN(targetRPM) ? 0 : targetRPM);
+        SmartDashboard.putString("Shooter/State", state.toString());
+        SmartDashboard.putNumber("Shooter/CurrentMain_A", m_motor.getOutputCurrent());
+        SmartDashboard.putNumber("Shooter/CurrentSecond_A", s_motor.getOutputCurrent());
+        SmartDashboard.putBoolean("Shooter/AtTarget", isAtTargetVelocity());
+        SmartDashboard.putBoolean("Shooter/Ready", isReady());
     }
 
     public void setWantedState(WantedState wantedState) {
@@ -150,23 +184,24 @@ public void periodic() {
         return state;
     }
 
+    /**
+     * Shooter is at target velocity and in a shooting state.
+     *
+     * Full "ready to fire" gate (use both together):
+     * boolean fire = shooterSubsystem.isReady() && swerveSubsystem.isAimAligned();
+     */
     public boolean isReady() {
-        if (currentWantedState == WantedState.PREPARING_SHOOTER ||
-                currentWantedState == WantedState.PREPARING_SHOOTER_AND_INTAKING ||
-                currentWantedState == WantedState.SHOOTING_AND_INTAKING ||
-                currentWantedState == WantedState.SHOOTING) {
-
+        if (currentWantedState == WantedState.PREPARING_SHOOTER
+                || currentWantedState == WantedState.PREPARING_SHOOTER_AND_INTAKING
+                || currentWantedState == WantedState.SHOOTING_AND_INTAKING
+                || currentWantedState == WantedState.SHOOTING) {
             return state == ShooterState.VELOCITY_CONTROL && isAtTargetVelocity();
         }
         return state == ShooterState.COAST;
     }
 
     public void setTargetRPM(double targetRPM) {
-        if (targetRPM != 0) {
-            this.targetRPM = targetRPM;
-        } else {
-            this.targetRPM = Double.NaN;
-        }
+        this.targetRPM = (targetRPM != 0) ? targetRPM : Double.NaN;
     }
 
     public double getTargetRPM() {
@@ -181,11 +216,6 @@ public void periodic() {
         if (Double.isNaN(targetRPM))
             return false;
         return Math.abs(getVelocity() - targetRPM) < Constants.ShooterConstants.kTolerance;
-    }
-
-    private void handleShootingTarget() {
-        closedLoop.setSetpoint(targetRPM, ControlType.kVelocity);
-        state = ShooterState.VELOCITY_CONTROL;
     }
 
     public void stop() {

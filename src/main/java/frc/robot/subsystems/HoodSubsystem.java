@@ -32,7 +32,6 @@ public class HoodSubsystem extends SubsystemBase {
     public HoodSubsystem() {
         servoRight = new Servo(Constants.HoodConstants.kServoRightID);
         servoLeft = new Servo(Constants.HoodConstants.kServoLeftID);
-        System.out.println(servoRight.getHandle());
 
         // Start at home
         setAngle(Constants.HoodConstants.kStartingPos);
@@ -40,27 +39,27 @@ public class HoodSubsystem extends SubsystemBase {
         SmartDashboard.putNumber("Hood/debug Angle", debugAngle);
     }
 
-public void setAngle(double degrees) {
-    double clamped = MathUtil.clamp(
-            degrees,
-            Constants.HoodConstants.kMinDeg,
-            Constants.HoodConstants.kMaxDeg);
+    public void setAngle(double degrees) {
+        double clamped = MathUtil.clamp(
+                degrees,
+                Constants.HoodConstants.kMinDeg,
+                Constants.HoodConstants.kMaxDeg);
 
-    if (this.targetAngle != Double.NaN && Math.abs(clamped - this.targetAngle) < 0.05) {
-        return;
+        if (this.targetAngle != Double.NaN && Math.abs(clamped - this.targetAngle) < 0.05) {
+            return;
+        }
+
+        this.targetAngle = clamped;
+
+        double normalized = (targetAngle - Constants.HoodConstants.kMinDeg) /
+                (Constants.HoodConstants.kMaxDeg - Constants.HoodConstants.kMinDeg);
+
+        servoLeft.set(normalized);
+        servoRight.set(1.0 - normalized);
+
+        lastSetTime = Timer.getFPGATimestamp();
+        state = HoodState.MOVING;
     }
-
-    this.targetAngle = clamped;
-    
-    double normalized = (targetAngle - Constants.HoodConstants.kMinDeg) /
-            (Constants.HoodConstants.kMaxDeg - Constants.HoodConstants.kMinDeg);
-
-    servoLeft.set(normalized);
-    servoRight.set(1.0 - normalized);
-
-    lastSetTime = Timer.getFPGATimestamp();
-    state = HoodState.MOVING;
-}
 
     /** Command wrapper */
     public Command setHoodAngleCommand(double angle) {
@@ -110,10 +109,7 @@ public void setAngle(double degrees) {
         if (Vision.getInstance().isInAllianceZone()) {
             setAngle(Constants.HoodConstants.kAllianceAngle);
         } else {
-            setAngle(
-                    Superstructure.getInstance()
-                            .getShooterParameters()
-                            .hoodAngle());
+            setAngle(Vision.getInstance().getHoodAngle());
         }
     }
 
@@ -161,7 +157,8 @@ public void setAngle(double degrees) {
     }
 
     private void tuning() {
-        if (!DriverStation.isTest()) return;
+        if (!DriverStation.isTest())
+            return;
         debugAngle = SmartDashboard.getNumber("Hood/debug Angle", 0);
         if (debugAngle != 0) {
             setAngle(debugAngle);

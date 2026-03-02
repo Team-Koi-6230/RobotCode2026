@@ -96,18 +96,17 @@ public class Robot extends TimedRobot {
     SmartDashboard.putNumber("Match Timer", (int) DriverStation.getMatchTime());
 
     if (DriverStation.isDisabled()) {
-      if (!lastPose2d.equals(intialPosePicker.getSelected())) {
-        // pick changed
-        var p = intialPosePicker.getSelected();
-        if (p != null) {
-          xEntry.setDouble(p.getX());
-          yEntry.setDouble(p.getY());
-          rotEntry.setDouble(p.getRotation().getDegrees());
-        }
-        lastPose2d = intialPosePicker.getSelected();
+      var selected = intialPosePicker.getSelected();
+
+      if (selected != null && !lastPose2d.equals(selected)) {
+        xEntry.setDouble(selected.getX());
+        yEntry.setDouble(selected.getY());
+        rotEntry.setDouble(selected.getRotation().getDegrees());
+
+        Superstructure.getInstance().getDrivebase().resetOdometry(selected);
+
+        lastPose2d = selected;
       }
-      Superstructure.getInstance().getDrivebase().setIntialPose(new Pose2d(xEntry.getDouble(kDefaultPeriod),
-          yEntry.getDouble(kDefaultPeriod), new Rotation2d(Math.toRadians(rotEntry.getDouble(kDefaultPeriod)))));
     }
   }
 
@@ -129,7 +128,7 @@ public class Robot extends TimedRobot {
     m_autonomousCommand = m_robotContainer.getAutonomousCommand();
 
     if (m_autonomousCommand != null) {
-      m_autonomousCommand.schedule();
+      CommandScheduler.getInstance().schedule(m_autonomousCommand);
     }
   }
 

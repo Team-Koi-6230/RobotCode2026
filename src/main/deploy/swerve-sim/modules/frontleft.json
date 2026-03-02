@@ -10,7 +10,7 @@
     "canbus": "rio"
   },
   "angle": {
-    "type": "sparkmax_neo",
+    "type": "sparkflex_vortex",
     "id": 4,
     "canbus": "rio"
   },

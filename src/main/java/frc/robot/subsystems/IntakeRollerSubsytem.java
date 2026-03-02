@@ -78,7 +78,6 @@ public class IntakeRollerSubsytem extends SubsystemBase {
 
     public void setTargetRpm(double rpm) {
         state = rpm != 0 ? IntakeRollerState.SPINNING : IntakeRollerState.IDLE;
-        System.out.println(rpm);
         if (rpm != 0) {
             targetRPM = rpm;
         } else {
