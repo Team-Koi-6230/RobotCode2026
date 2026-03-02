@@ -263,7 +263,6 @@ public class SwerveSubsystem extends SubsystemBase {
             }
         }
 
-        System.out.println(vision.getShooterPose().getX() + " | " + vision.getShooterPose().getY());
         m_shooterPos.setPose(vision.getShooterPose());
     }
 

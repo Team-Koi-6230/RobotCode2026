@@ -153,7 +153,7 @@ public class IntakeRollerSubsytem extends SubsystemBase {
                     ResetMode.kNoResetSafeParameters,
                     PersistMode.kNoPersistParameters);
 
-            System.out.println("Roller: Tuned in new values! 🌪️");
+            System.out.println("Roller: Tuned in new values!");
         }
     }
 

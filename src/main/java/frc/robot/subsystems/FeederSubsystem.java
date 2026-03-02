@@ -140,7 +140,7 @@ public class FeederSubsystem extends SubsystemBase {
                     ResetMode.kNoResetSafeParameters,
                     PersistMode.kNoPersistParameters);
 
-            System.out.println("Feeder: PID + FF Updated! 🌪️");
+            System.out.println("Feeder: PID + FF Updated!");
         }
 
         double debugRPM = SmartDashboard.getNumber("Feeder/DebugTargetRPM", 0.0);
