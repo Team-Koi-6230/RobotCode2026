@@ -26,17 +26,9 @@ public class ClimberSubsystem extends SubsystemBase {
     AT_TARGET_HANG
   }
 
-  public enum L3ClimbJourney {
-    NONE,
-    L1Open,
-    L1Closed,
-    L2Open,
-    L2Closed,
-    L3Open,
-    L3Closed
-  }
+  
 
-  private L3ClimbJourney L3Journey = L3ClimbJourney.NONE;
+
   private double targetHeight = 0.0;
   private ClimberState state = ClimberState.MOVING_GROUND;
   private WantedState currentWantedState;
@@ -172,48 +164,16 @@ public class ClimberSubsystem extends SubsystemBase {
   }
 
   private void HandleL1() {
+    if (!hasExtendedL1) {
     setPositionGround(Constants.ClimberConstants.kL1ExtendHeight);
+
     if (state == ClimberState.AT_TARGET_GROUND) {
       hasExtendedL1 = true;
     }
-    if (hasExtendedL1) {
-      setPositionHang(Constants.ClimberConstants.kL1CloseHeight);
-    }
+
+  } else {
+    setPositionHang(Constants.ClimberConstants.kL1CloseHeight);
   }
-
-  private void HandleL3() {
-    switch (L3Journey) {
-      case NONE:
-        setPositionGround(Constants.ClimberConstants.k1StageExtendHeight);
-        break;
-      case L1Open:
-        setPositionHang(Constants.ClimberConstants.k1StageCloseHeight);
-        break;
-      case L1Closed:
-        setPositionHang(Constants.ClimberConstants.kL2ExtendHeight);
-        break;
-      case L2Open:
-        setPositionHang(Constants.ClimberConstants.kL2CloseHeight);
-        break;
-      case L3Closed:
-        setPositionHang(Constants.ClimberConstants.kL3ExtendHeight);
-        break;
-      default:
-        break;
-    }
-    if (L3Journey == L3ClimbJourney.NONE || L3Journey == L3ClimbJourney.L1Closed
-        || L3Journey == L3ClimbJourney.L2Closed) {
-      if (state == ClimberState.AT_TARGET_GROUND) {
-        L3Journey = L3ClimbJourney.values()[L3Journey.ordinal() + 1];
-      }
-    }
-    if (L3Journey == L3ClimbJourney.L1Open || L3Journey == L3ClimbJourney.L2Open
-        || L3Journey == L3ClimbJourney.L3Open) {
-      if (state == ClimberState.AT_TARGET_GROUND) {
-        L3Journey = L3ClimbJourney.values()[L3Journey.ordinal() + 1];
-      }
-    }
-
   }
 
   private void handleState() {
@@ -228,10 +188,39 @@ public class ClimberSubsystem extends SubsystemBase {
         case SHOOTING_AND_INTAKING:
           setHeightCommandGround(0);
           break;
-        case L1_EXTEND_TELEOP: // WORK HERE!!!!!!!!!!
-          HandleL1();
-          break;
-        default:
+      case L1_EXTEND_AUTON:
+      if (state == ClimberState.MOVING_GROUND || state == ClimberState.AT_TARGET_GROUND) {
+        setPositionGround(Constants.ClimberConstants.kL1ExtendAuton);
+      } else {
+        setPositionHang(Constants.ClimberConstants.kL1ExtendAuton);
+      }
+      break;
+
+    case L1_CLOSE_AUTON:
+      if (state == ClimberState.MOVING_HANG || state == ClimberState.AT_TARGET_HANG) {
+        setPositionHang(Constants.ClimberConstants.kL1CloseAuton);
+      } else {
+        setPositionGround(Constants.ClimberConstants.kL1CloseAuton);
+      }
+      break;
+
+    case L1_EXTEND_TELEOP:
+      if (state == ClimberState.MOVING_HANG || state == ClimberState.AT_TARGET_HANG) {
+        setPositionHang(Constants.ClimberConstants.kL1ExtendTeleop);
+      } else {
+        setPositionGround(Constants.ClimberConstants.kL1ExtendTeleop);
+      }
+      break;
+
+    case L1_CLOSE_TELEOP:
+      if (state == ClimberState.MOVING_HANG || state == ClimberState.AT_TARGET_HANG) {
+        setPositionHang(Constants.ClimberConstants.kL1CloseTeleop);
+      } else {
+        setPositionGround(Constants.ClimberConstants.kL1CloseTeleop);
+      }
+      break;
+
+          default:
           break;
       }
     }
@@ -239,23 +228,26 @@ public class ClimberSubsystem extends SubsystemBase {
 
   private void motorLogic() {
     if (isGrounded) {
-      closedLoop.setSetpoint(targetHeight, ControlType.kPosition, ClosedLoopSlot.kSlot0);
+      closedLoop.setSetpoint(targetHeight, ControlType.kMAXMotionPositionControl, ClosedLoopSlot.kSlot0);
       if (Math.abs(targetHeight - getHeight()) < Constants.ClimberConstants.kTolerance) {
         state = ClimberState.AT_TARGET_GROUND;
       } else {
         state = ClimberState.MOVING_GROUND;
       }
     } else {
-      closedLoop.setSetpoint(targetHeight, ControlType.kPosition, ClosedLoopSlot.kSlot1);
+      closedLoop.setSetpoint(targetHeight, ControlType.kMAXMotionPositionControl, ClosedLoopSlot.kSlot1);
       if (Math.abs(targetHeight - getHeight()) < Constants.ClimberConstants.kTolerance) {
         state = ClimberState.AT_TARGET_HANG;
       } else {
-        state = ClimberState.MOVING_GROUND;
+        state = ClimberState.MOVING_HANG; 
       }
     }
   }
 
   public void setWantedState(WantedState wantedState) {
     this.currentWantedState = wantedState;
+    if (wantedState != WantedState.L1_EXTEND_TELEOP) {
+    hasExtendedL1 = false;
+  }
   }
 }
