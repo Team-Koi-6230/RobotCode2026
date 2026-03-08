@@ -195,10 +195,6 @@ public class IntakeArmSubsystem extends SubsystemBase {
         return Math.abs(IntakeArmConstants.kClosedAngle - getAngle()) < IntakeArmConstants.kTolerance;
     }
 
-    private boolean isAtTarget() {
-        return Math.abs(targetAngle - getAngle()) < IntakeArmConstants.kTolerance;
-    }
-
     public void OpenArm() {
         setAngle(IntakeArmConstants.kOpenAngle);
     }

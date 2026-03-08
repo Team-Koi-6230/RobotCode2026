@@ -11,7 +11,6 @@ import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.robot.Constants;
-import frc.robot.subsystems.ClimberSubsystem.ClimberState;
 import frc.robot.subsystems.FeederSubsystem.FeederState;
 import frc.robot.subsystems.HoodSubsystem.HoodState;
 import frc.robot.subsystems.IntakeArmSubsystem.IntakeArmState;
