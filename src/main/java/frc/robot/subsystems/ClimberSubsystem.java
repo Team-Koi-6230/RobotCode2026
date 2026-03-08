@@ -26,9 +26,6 @@ public class ClimberSubsystem extends SubsystemBase {
     AT_TARGET_HANG
   }
 
-  
-
-
   private double targetHeight = 0.0;
   private ClimberState state = ClimberState.MOVING_GROUND;
   private WantedState currentWantedState;
@@ -38,7 +35,6 @@ public class ClimberSubsystem extends SubsystemBase {
   private final DutyCycleEncoder abs_encoder;
   private final SparkClosedLoopController closedLoop;
   private boolean isGrounded = true;
-  private boolean hasExtendedL1 = false;
 
   public ClimberSubsystem() {
     m_motor = new SparkMax(Constants.ClimberConstants.kMainMotorID, MotorType.kBrushless);
@@ -175,39 +171,39 @@ public class ClimberSubsystem extends SubsystemBase {
         case SHOOTING_AND_INTAKING:
           setPositionGround(targetHeight);
           break;
-      case L1_EXTEND_AUTON:
-      if (state == ClimberState.MOVING_GROUND || state == ClimberState.AT_TARGET_GROUND) {
-        setPositionGround(Constants.ClimberConstants.kL1ExtendAuton);
-      } else {
-        setPositionHang(Constants.ClimberConstants.kL1ExtendAuton);
-      }
-      break;
+        case L1_EXTEND_AUTON:
+          if (state == ClimberState.MOVING_GROUND || state == ClimberState.AT_TARGET_GROUND) {
+            setPositionGround(Constants.ClimberConstants.kL1ExtendAuton);
+          } else {
+            setPositionHang(Constants.ClimberConstants.kL1ExtendAuton);
+          }
+          break;
 
-    case L1_CLOSE_AUTON:
-      if (state == ClimberState.MOVING_HANG || state == ClimberState.AT_TARGET_HANG) {
-        setPositionHang(Constants.ClimberConstants.kL1CloseAuton);
-      } else {
-        setPositionGround(Constants.ClimberConstants.kL1CloseAuton);
-      }
-      break;
+        case L1_CLOSE_AUTON:
+          if (state == ClimberState.MOVING_HANG || state == ClimberState.AT_TARGET_HANG) {
+            setPositionHang(Constants.ClimberConstants.kL1CloseAuton);
+          } else {
+            setPositionGround(Constants.ClimberConstants.kL1CloseAuton);
+          }
+          break;
 
-    case L1_EXTEND_TELEOP:
-      if (state == ClimberState.MOVING_HANG || state == ClimberState.AT_TARGET_HANG) {
-        setPositionHang(Constants.ClimberConstants.kL1ExtendTeleop);
-      } else {
-        setPositionGround(Constants.ClimberConstants.kL1ExtendTeleop);
-      }
-      break;
+        case L1_EXTEND_TELEOP:
+          if (state == ClimberState.MOVING_HANG || state == ClimberState.AT_TARGET_HANG) {
+            setPositionHang(Constants.ClimberConstants.kL1ExtendTeleop);
+          } else {
+            setPositionGround(Constants.ClimberConstants.kL1ExtendTeleop);
+          }
+          break;
 
-    case L1_CLOSE_TELEOP:
-      if (state == ClimberState.MOVING_HANG || state == ClimberState.AT_TARGET_HANG) {
-        setPositionHang(Constants.ClimberConstants.kL1CloseTeleop);
-      } else {
-        setPositionGround(Constants.ClimberConstants.kL1CloseTeleop);
-      }
-      break;
+        case L1_CLOSE_TELEOP:
+          if (state == ClimberState.MOVING_HANG || state == ClimberState.AT_TARGET_HANG) {
+            setPositionHang(Constants.ClimberConstants.kL1CloseTeleop);
+          } else {
+            setPositionGround(Constants.ClimberConstants.kL1CloseTeleop);
+          }
+          break;
 
-          default:
+        default:
           break;
       }
     }
@@ -226,15 +222,12 @@ public class ClimberSubsystem extends SubsystemBase {
       if (Math.abs(targetHeight - getHeight()) < Constants.ClimberConstants.kTolerance) {
         state = ClimberState.AT_TARGET_HANG;
       } else {
-        state = ClimberState.MOVING_HANG; 
+        state = ClimberState.MOVING_HANG;
       }
     }
   }
 
   public void setWantedState(WantedState wantedState) {
     this.currentWantedState = wantedState;
-    if (wantedState != WantedState.L1_EXTEND_TELEOP) {
-    hasExtendedL1 = false;
-  }
   }
 }
