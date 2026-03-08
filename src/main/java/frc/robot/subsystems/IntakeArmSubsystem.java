@@ -10,6 +10,7 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 import com.revrobotics.spark.config.MAXMotionConfig.MAXMotionPositionMode;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -29,6 +30,7 @@ public class IntakeArmSubsystem extends SubsystemBase {
     private int syncCounter = 0; // To avoid syncing every single frame
     private int currentStep;
     private double targetDistance;
+    private boolean isMovingOut = true; // Added for the shake state machine
 
     public enum IntakeArmState {
         IDLE, OPEN, CLOSED, MOVING, SHAKE
@@ -110,10 +112,12 @@ public class IntakeArmSubsystem extends SubsystemBase {
 
         if (!Double.isNaN(targetAngle)) {
             double error = Math.abs(targetAngle - getAngle());
-            if (error < 5) {
+            if (error < 2) {
                 m_controller.setSetpoint(0, ControlType.kVoltage);
+                SmartDashboard.putBoolean("Arm/is stopping", true);
             } else {
                 m_controller.setSetpoint(targetAngle, ControlType.kMAXMotionPositionControl);
+                SmartDashboard.putBoolean("Arm/is stopping", false);
             }
         } else {
             m_motor.stopMotor();
@@ -125,11 +129,15 @@ public class IntakeArmSubsystem extends SubsystemBase {
             m_relativeEncoder.setPosition(m_absoluteEncoder.get());
             _lastTargetAngle = targetAngle;
         }
-        
-        // reset the current step counter when not shaking
+
+        // reset the current step counter and direction when not shaking
         if (state != IntakeArmState.SHAKE) {
             currentStep = 1;
+            isMovingOut = isOpen() ? false : true;
         }
+
+        SmartDashboard.putNumber("Arm/Rel encoder angle", getAngle());
+        SmartDashboard.putNumber("Arm/TargetAngle", targetAngle);
     }
 
     /**
@@ -187,11 +195,7 @@ public class IntakeArmSubsystem extends SubsystemBase {
         return Math.abs(IntakeArmConstants.kClosedAngle - getAngle()) < IntakeArmConstants.kTolerance;
     }
 
-    private boolean isAtMaxShake() {
-        return Math.abs(IntakeArmConstants.kShakeMax - getAngle()) < IntakeArmConstants.kTolerance;
-    }
-
-    private boolean isAtTarget(){
+    private boolean isAtTarget() {
         return Math.abs(targetAngle - getAngle()) < IntakeArmConstants.kTolerance;
     }
 
@@ -206,8 +210,9 @@ public class IntakeArmSubsystem extends SubsystemBase {
     private void handleWantedState() {
         switch (currentWantedState) {
             case IDLE:
-            case HOME:
             case PREPARING_SHOOTER:
+                break;
+            case HOME:
             case L1_CLOSE_AUTON:
             case L1_CLOSE_TELEOP:
             case L1_EXTEND_AUTON:
@@ -227,21 +232,35 @@ public class IntakeArmSubsystem extends SubsystemBase {
     }
 
     private void handleArmShake() {
-        if (isAtMaxShake() || isOpen()) {
-            targetDistance = IntakeArmConstants.kShakeMax + (IntakeArmConstants.KStepDistance * currentStep);
+        // Calculate how far out we should go this step
+        targetDistance = IntakeArmConstants.kShakeMax - (IntakeArmConstants.KStepDistance * currentStep);
 
-            if (targetDistance > IntakeArmConstants.kShakeMin) {
-                currentStep = 1;
-                targetDistance = IntakeArmConstants.kShakeMax + (IntakeArmConstants.KStepDistance * currentStep);
-            }
+        MathUtil.clamp(targetDistance, IntakeArmConstants.kShakeMin, IntakeArmConstants.kShakeMax);
 
+        // Cap it so we don't accidentally break the arm past kShakeMin
+        if (targetDistance < IntakeArmConstants.kShakeMin) {
+            targetDistance = IntakeArmConstants.kShakeMin;
+        }
+
+        if (isMovingOut) {
             setAngle(targetDistance);
+
+            // Once we reach the outward step, flip direction to go back in
+            if (getAngle() < targetDistance) {
+                isMovingOut = false;
+            }
+            System.out.println("moving out step: " + currentStep);
+        } else {
+            setAngle(IntakeArmConstants.kShakeMax); // Retract back in
+
+            // Once we fully retract, increment step and go back out
+            if (getAngle() > IntakeArmConstants.kShakeMax) {
+                isMovingOut = true;
+                currentStep++;
+
+                System.out.println("moving in step: " + currentStep);
+            }
         }
-        else if (isAtTarget()) {
-            setAngle(IntakeArmConstants.kShakeMax);
-            currentStep += 1;
-        }
-        
     }
 
     private void tuning() {

@@ -139,22 +139,22 @@ public final class Constants {
   public static class IntakeArmConstants {
     public static final int kAbsoluteEncoderID = 0;
     public static final int kMotorID = 15;
-    public static final double kP = 0.000003, kI = 0, kD = 0;
-    public static final double kS = 0.15, kV = 0.0047, kA = 0, kG = 0.050;
+    public static final double kP = 0.0001, kI = 0, kD = 0;
+    public static final double kS = 0.144, kV = 0.0025, kA = 0, kG = 0.185;
     public static final double kCosRatio = 1;
     public static final double kMaxAcceleration = 46000;
     public static final double kCruiseVelocity = 400000;
-    public static final double kGearRatio = 48;
+    public static final double kGearRatio = 25;
     public static final int kAbsoluteEncoderRange = 360;
-    public static final int kAbsoluteEncoderOffset = 165;
+    public static final int kAbsoluteEncoderOffset = 160;
     public static final double kTolerance = 0.5;
-    public static final int kOpenAngle = 325;
-    public static final int kClosedAngle = 1;
-    public static final double KStepDistance = 40;
-    public static final double kShakeMin = 70;
-    public static final double kShakeMax = 270;
+    public static final int kOpenAngle = 323;
+    public static final int kClosedAngle = 7;
+    public static final double KStepDistance = 100;
+    public static final double kShakeMax = kOpenAngle - 3;
+    public static final double kShakeMin = kClosedAngle + 3;
     public static final double kForwardSoftLimit = 324;
-    public static final double kReverseSoftLimit = 8;
+    public static final double kReverseSoftLimit = 6;
   }
 
   public static class IntakeRollerConstants {
@@ -205,4 +205,4 @@ public final class Constants {
     public static final LEDPattern kIntakeLED = LEDPattern.solid(new Color("rgba(255, 65, 138, 1)"));
     public static final LEDPattern kClimbsLED = LEDPattern.solid(new Color("rgba(45, 68, 243, 1)"));
   }
-}
+} 

@@ -44,7 +44,7 @@ public class RobotContainer {
                                 drivebase.getSwerveDrive(),
                                 () -> -driverController.getLeftY(),
                                 () -> -driverController.getLeftX())
-                                .withControllerRotationAxis(() -> -driverController.getRightX())
+                                .withControllerRotationAxis(() -> driverController.getRightX())
                                 .deadband(OperatorConstants.kDeadband)
                                 .scaleTranslation(1.0)
                                 .allianceRelativeControl(true);

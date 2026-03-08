@@ -259,10 +259,9 @@ public class SwerveSubsystem extends SubsystemBase {
 
                 var hub = AllianceFlipUtil.apply(FieldConstants.Hub.innerCenterPoint);
                 m_hubCenter.setPose(new Pose2d(hub.getX(), hub.getY(), new Rotation2d()));
+                m_shooterPos.setPose(vision.getShooterPose());
             }
         }
-
-        m_shooterPos.setPose(vision.getShooterPose());
     }
 
     @Override
