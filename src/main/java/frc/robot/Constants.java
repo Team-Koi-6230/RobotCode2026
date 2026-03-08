@@ -189,10 +189,10 @@ public final class Constants {
     public static final int kStallLimit = 40;
     public static final double kMetersPerRotation = 0.0;
     public static final double kClosedElevator = 0.0;
-    public static final double kL1ExtendHeight = 0.0, kL1CloseHeight = 0.0;
-    public static final double k1StageExtendHeight = 0.0, k1StageCloseHeight = 0.0;
-    public static final double kL2ExtendHeight = 0.0, kL2CloseHeight = 0.0;
-    public static final double kL3ExtendHeight = 0.0, kL3CloseHeight = 0.0;
+    public static final double kL1ExtendTeleop = 0,
+                               kL1ExtendAuton = 0,
+                               kL1CloseTeleop = 0,
+                               kL1CloseAuton = 0;
   }
 
   public static class LEDconstants {

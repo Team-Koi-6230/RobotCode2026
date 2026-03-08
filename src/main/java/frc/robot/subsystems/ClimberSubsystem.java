@@ -112,19 +112,19 @@ public class ClimberSubsystem extends SubsystemBase {
   }
 
   public Command extendClimberGroundCommand() {
-    return setHeightCommandGround(Constants.ClimberConstants.kL1ExtendHeight);
+    return setHeightCommandGround(Constants.ClimberConstants.kL1ExtendAuton);
   }
 
   public Command extendClimberHangCommand() {
-    return setHeightCommandHang(Constants.ClimberConstants.kL1ExtendHeight);
+    return setHeightCommandHang(Constants.ClimberConstants.kL1ExtendAuton);
   }
 
   public Command closeClimberGroundCommand() {
-    return setHeightCommandGround(Constants.ClimberConstants.kL1CloseHeight);
+    return setHeightCommandGround(Constants.ClimberConstants.kL1CloseTeleop);
   }
 
   public Command closeClimberHangCommand() {
-    return setHeightCommandHang(Constants.ClimberConstants.kL1CloseHeight);
+    return setHeightCommandHang(Constants.ClimberConstants.kL1CloseTeleop);
   }
 
   public void stop() {
@@ -163,19 +163,6 @@ public class ClimberSubsystem extends SubsystemBase {
     return true;
   }
 
-  private void HandleL1() {
-    if (!hasExtendedL1) {
-    setPositionGround(Constants.ClimberConstants.kL1ExtendHeight);
-
-    if (state == ClimberState.AT_TARGET_GROUND) {
-      hasExtendedL1 = true;
-    }
-
-  } else {
-    setPositionHang(Constants.ClimberConstants.kL1CloseHeight);
-  }
-  }
-
   private void handleState() {
     if (currentWantedState != null) {
       switch (currentWantedState) {
@@ -186,7 +173,7 @@ public class ClimberSubsystem extends SubsystemBase {
         case PREPARING_SHOOTER:
         case PREPARING_SHOOTER_AND_INTAKING:
         case SHOOTING_AND_INTAKING:
-          setHeightCommandGround(0);
+          setPositionGround(targetHeight);
           break;
       case L1_EXTEND_AUTON:
       if (state == ClimberState.MOVING_GROUND || state == ClimberState.AT_TARGET_GROUND) {
