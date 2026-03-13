@@ -86,21 +86,9 @@ public class Vision {
         }
         SmartDashboard.putBoolean("Vision/HasTarget", true);
 
-        // --- Pose-jump rejection ---
-        double jumpM = mt2.pose.getTranslation()
-                .getDistance(swerveDrive.getPose().getTranslation());
-        if (_hasFirstPose && jumpM > VisionConstants.kMaxPoseJumpMeters) {
-            SmartDashboard.putNumber("Vision/MT2_RejectedJump_m", jumpM);
-            return false;
-        }
-        SmartDashboard.putNumber("Vision/MT2_RejectedJump_m", 0.0);
-
         // --- Fuse with dynamic stddevs ---
         Matrix<N3, N1> stdDevs = computeDynamicStdDevs(mt2);
         swerveDrive.addVisionMeasurement(mt2.pose, mt2.timestampSeconds, stdDevs);
-
-        _lastAcceptedPose = swerveDrive.getPose();
-        _hasFirstPose = true;
 
         // --- Telemetry ---
         SmartDashboard.putNumber("Vision/TagCount", mt2.tagCount);
