@@ -92,7 +92,7 @@ public class SwerveSubsystem extends SubsystemBase {
         if (RobotBase.isSimulation())
             SwerveDriveTelemetry.verbosity = TelemetryVerbosity.HIGH;
         else
-            SwerveDriveTelemetry.verbosity = TelemetryVerbosity.NONE;
+            SwerveDriveTelemetry.verbosity = TelemetryVerbosity.HIGH;
         try {
             swerveDrive = new SwerveParser(directory).createSwerveDrive(
                     Constants.SwerveDriveConstants.kMaxSpeed,

@@ -39,7 +39,7 @@ public final class Constants {
   }
 
   public static class SwerveDriveConstants {
-    public static final double kMaxSpeed = 5.36448;
+    public static final double kMaxSpeed = 4;
     public static final double kMaxAngularVelocity = 4 * Math.PI;
     public static final double kAimingSpeedModifier = 2.5;
     public static final double kMaxStrafe = 2;
@@ -55,7 +55,7 @@ public final class Constants {
     public static final double kVr = 0.40;
     public static final double kAr = 0.01;
 
-    public static final double kMaxRotVelocity = 8 * Math.PI; 
+    public static final double kMaxRotVelocity = 8 * Math.PI;
     public static final double kMaxRotAcceleration = 16 * Math.PI;
   }
 
@@ -99,11 +99,11 @@ public final class Constants {
     static {
       fillMap(kShotHoodAngleMap,
           new double[] { 1.3, 2.0, 3.0, 4.0, 5.5 },
-          new double[] { 18.0, 22.0, 27.0, 31.0, 35.0 });
+          new double[] { 180, 180, 180, 180, 180 });
 
       fillMap(kShotFlywheelSpeedMap,
           new double[] { 1.3, 2.0, 3.0, 4.0, 5.5 },
-          new double[] { 3000, 4500, 5000, 5700, 6250 });
+          new double[] { 3400, 3400, 3400, 3400, 3400 });
 
       fillMap(kTimeOfFlightMap,
           new double[] { 1.3, 2.0, 3.0, 4.0, 5.5 },
@@ -190,9 +190,9 @@ public final class Constants {
     public static final double kMetersPerRotation = 0.0;
     public static final double kClosedElevator = 0.0;
     public static final double kL1ExtendTeleop = 0,
-                               kL1ExtendAuton = 0,
-                               kL1CloseTeleop = 0,
-                               kL1CloseAuton = 0;
+        kL1ExtendAuton = 0,
+        kL1CloseTeleop = 0,
+        kL1CloseAuton = 0;
   }
 
   public static class LEDconstants {
@@ -205,4 +205,4 @@ public final class Constants {
     public static final LEDPattern kIntakeLED = LEDPattern.solid(new Color("rgba(255, 65, 138, 1)"));
     public static final LEDPattern kClimbsLED = LEDPattern.solid(new Color("rgba(45, 68, 243, 1)"));
   }
-} 
+}
