@@ -379,20 +379,10 @@ public class Vision {
     }
 
     private PoseEstimate getBotPoseEstimateMegaTag2() {
-        if (!Constants.disableHAL
-                && DriverStation.getAlliance().isPresent()
-                && DriverStation.getAlliance().get() == DriverStation.Alliance.Red)
-            return LimelightHelpers.getBotPoseEstimate_wpiRed_MegaTag2(_limelightName);
-
         return LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2(_limelightName);
     }
 
     private PoseEstimate getBotPoseEstimateMegaTag1() {
-        if (!Constants.disableHAL
-                && DriverStation.getAlliance().isPresent()
-                && DriverStation.getAlliance().get() == DriverStation.Alliance.Red)
-            return LimelightHelpers.getBotPoseEstimate_wpiRed(_limelightName);
-
         return LimelightHelpers.getBotPoseEstimate_wpiBlue(_limelightName);
     }
 
