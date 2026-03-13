@@ -26,6 +26,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.DriverStation.MatchType;
 import edu.wpi.first.wpilibj.smartdashboard.FieldObject2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -35,6 +36,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Config;
 import frc.robot.Constants;
 import frc.robot.Constants.ShooterConstants;
+import frc.robot.Constants.SwerveDriveConstants;
 import frc.robot.subsystems.Superstructure.WantedState;
 import frc.robot.FieldConstants;
 import frc.robot.utils.AllianceFlipUtil;
@@ -531,6 +533,12 @@ public class SwerveSubsystem extends SubsystemBase {
      * Vision computes after lead compensation.
      */
     public void driveBasedOnState(ChassisSpeeds velocity) {
+        if (Superstructure.getInstance().getIsSlowMode()) {
+            velocity.omegaRadiansPerSecond = Math.min(velocity.omegaRadiansPerSecond, SwerveDriveConstants.kSlowAngularSpeedMax);
+            velocity.vxMetersPerSecond = Math.min(velocity.vxMetersPerSecond, SwerveDriveConstants.kSlowSpeedMax);
+            velocity.vyMetersPerSecond = Math.min(velocity.vyMetersPerSecond, SwerveDriveConstants.kSlowSpeedMax);
+        }
+
         state = SwerveState.TELEOP;
 
         if (Superstructure.getInstance().isManualMode()) {

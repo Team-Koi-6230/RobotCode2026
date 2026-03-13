@@ -15,7 +15,7 @@ public final class Constants {
   public static class OperatorConstants {
     public static final int kDriverControllerPort = 0;
     public static final int kOperatorControllerPort = 1;
-    public static final double kDeadband = 0.3;
+    public static final double kDeadband = 0.1;
     public static final RumblePack kGameShiftRumble = new RumblePack(0.7, 0.5, Priority.HIGH);
     public static final int kTeleopInterval = 25;
     public static final int kEndGameTime = 30;
@@ -43,6 +43,9 @@ public final class Constants {
     public static final double kMaxAngularVelocity = 4 * Math.PI;
     public static final double kAimingSpeedModifier = 2.5;
     public static final double kMaxStrafe = 2;
+
+    public static final double kSlowSpeedMax = 3;
+    public static final double kSlowAngularSpeedMax = Math.PI;
 
     public static final double kTargetErrorToleranceStatic = Math.toRadians(1.5);
     public static final double kTargetErrorToleranceMoving = Math.toRadians(3.0);

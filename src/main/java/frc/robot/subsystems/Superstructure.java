@@ -84,6 +84,8 @@ public class Superstructure extends SubsystemBase {
     private final HoodSubsystem hoodSubsystem;
     private final SwerveSubsystem drivebase;
 
+    private boolean isSlowMode = false;
+
     private Superstructure() {
         drivebase = new SwerveSubsystem(
                 new File(
@@ -99,6 +101,8 @@ public class Superstructure extends SubsystemBase {
         intakeRollerSubsystem = new IntakeRollerSubsytem();
         // climberSubsystem = new ClimberSubsystem();
         hoodSubsystem = new HoodSubsystem();
+
+        SmartDashboard.putBoolean("SwerveControl/slow mode", isSlowMode);
     }
 
     @Override
@@ -107,6 +111,8 @@ public class Superstructure extends SubsystemBase {
             onWantedStateChange();
             previousWantedState = wantedState;
         }
+
+        isSlowMode = SmartDashboard.getBoolean("SwerveControl/slow mode", false);
 
         updateCurrentState();
 
@@ -307,5 +313,9 @@ public class Superstructure extends SubsystemBase {
 
     public double getSwerveHubRelativeStrafeSpeed() {
         return drivebase.getHubRelativeVelocity().radialSpeed();
+    }
+
+    public boolean getIsSlowMode() {
+        return isSlowMode;
     }
 }
