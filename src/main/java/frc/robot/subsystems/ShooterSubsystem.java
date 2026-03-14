@@ -31,6 +31,7 @@ public class ShooterSubsystem extends SubsystemBase {
     private ShooterState state = ShooterState.COAST;
     private WantedState currentWantedState;
     private double targetRPM = Double.NaN;
+    private double targetSurfaceSpeed = Double.NaN;
 
     private SwerveSubsystem swerveSubsystem;
 
@@ -65,7 +66,7 @@ public class ShooterSubsystem extends SubsystemBase {
                 com.revrobotics.ResetMode.kResetSafeParameters,
                 com.revrobotics.PersistMode.kPersistParameters);
 
-        SmartDashboard.putNumber("Shooter/Debug RPM", 0);
+        SmartDashboard.putNumber("Shooter/Debug Speed", 0);
     }
 
     public void setSwerveSubsystem(SwerveSubsystem swerve) {
@@ -138,15 +139,15 @@ public class ShooterSubsystem extends SubsystemBase {
      */
     private void score() {
         if (swerveSubsystem != null) {
-            setTargetRPM(Vision.getInstance()
+            setTargetSurfaceSpeed(Vision.getInstance()
                     .getCompensatedFlywheelRPM());
         } else {
-            setTargetRPM(ShooterConstants.kMaxRPM);
+            setTargetSurfaceSpeed(ShooterConstants.kMaxSpeed);
         }
     }
 
     private void shootToAllianceZone() {
-        setTargetRPM(Constants.ShooterConstants.kNeutralZoneShootingRPM);
+        setTargetRPM(Constants.ShooterConstants.kNeutralZoneShootingSpeed);
     }
 
     private void handleShootingTarget() {
@@ -155,13 +156,13 @@ public class ShooterSubsystem extends SubsystemBase {
     }
 
     private void runTuningMode() {
-        double debugRPM = SmartDashboard.getNumber("Shooter/Debug RPM", 0);
-        targetRPM = debugRPM;
-        if (debugRPM == 0) {
+        double debugSpeed = SmartDashboard.getNumber("Shooter/Debug Speed", 0);
+        setTargetSurfaceSpeed(debugSpeed);
+        if (debugSpeed == 0) {
             m_motor.stopMotor();
             state = ShooterState.COAST;
         } else {
-            closedLoop.setSetpoint(debugRPM, ControlType.kVelocity);
+            closedLoop.setSetpoint(targetRPM, ControlType.kVelocity);
             state = ShooterState.VELOCITY_CONTROL;
         }
     }
@@ -169,6 +170,8 @@ public class ShooterSubsystem extends SubsystemBase {
     private void publishTelemetry() {
         SmartDashboard.putNumber("Shooter/CurrentRPM", getVelocity());
         SmartDashboard.putNumber("Shooter/TargetRPM", Double.isNaN(targetRPM) ? 0 : targetRPM);
+        SmartDashboard.putNumber("Shooter/Target Surface Speed", Double.isNaN(targetSurfaceSpeed) ? 0 : targetSurfaceSpeed);
+        SmartDashboard.putNumber("Shooter/Current Surface Speed", getSurfaceVelocity());
         SmartDashboard.putString("Shooter/State", state.toString());
         SmartDashboard.putNumber("Shooter/CurrentMain_A", m_motor.getOutputCurrent());
         SmartDashboard.putNumber("Shooter/CurrentSecond_A", s_motor.getOutputCurrent());
@@ -202,6 +205,12 @@ public class ShooterSubsystem extends SubsystemBase {
 
     public void setTargetRPM(double targetRPM) {
         this.targetRPM = (targetRPM != 0) ? targetRPM : Double.NaN;
+        this.targetSurfaceSpeed =  (targetRPM * Math.PI * ShooterConstants.kWheelDiameterMeters) / 60;
+    }
+
+    public void setTargetSurfaceSpeed(double surfaceSpeed) {
+        this.targetSurfaceSpeed = surfaceSpeed != 0 ? surfaceSpeed : Double.NaN;
+        this.targetRPM = surfaceSpeed != 0 ? (surfaceSpeed * 60) / (Math.PI * ShooterConstants.kWheelDiameterMeters) : Double.NaN;
     }
 
     public double getTargetRPM() {
@@ -210,6 +219,10 @@ public class ShooterSubsystem extends SubsystemBase {
 
     public double getVelocity() {
         return encoder.getVelocity();
+    }
+
+    public double getSurfaceVelocity() {
+        return (getVelocity() * Math.PI * ShooterConstants.kWheelDiameterMeters) / 60;
     }
 
     public boolean isAtTargetVelocity() {

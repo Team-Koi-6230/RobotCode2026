@@ -36,7 +36,6 @@ public class Vision {
 
     private final String _limelightName;
     private Pose2d _lastAcceptedPose = new Pose2d();
-    private boolean _hasFirstPose = false;
     private double _lastYawCorrTimeSec = -999.0;
 
     private final MedianFilter velocityFilter = new MedianFilter(5);
@@ -216,10 +215,10 @@ public class Vision {
         double radialComp = -(radialTowardHub / SwerveDriveConstants.kMaxSpeed)
                 * ShooterConstants.kRadialRPMComp;
 
-        SmartDashboard.putNumber("Vision/RPM_Base", baseRPM);
-        SmartDashboard.putNumber("Vision/RPM_RadialComp", radialComp);
-        SmartDashboard.putNumber("Vision/RPM_Compensated", baseRPM + radialComp);
-        SmartDashboard.putNumber("Vision/RPM_RadialSpeed", radialTowardHub);
+        SmartDashboard.putNumber("Vision/Speed_Base", baseRPM);
+        SmartDashboard.putNumber("Vision/Speed_RadialComp", radialComp);
+        SmartDashboard.putNumber("Vision/Speed_Compensated", baseRPM + radialComp);
+        SmartDashboard.putNumber("Vision/Speed_RadialSpeed", radialTowardHub);
 
         return baseRPM + radialComp;
     }

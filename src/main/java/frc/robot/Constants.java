@@ -76,6 +76,8 @@ public final class Constants {
     public static final int kStallLimit = 80;
     public static final boolean kInverted = true;
 
+    public static final double kWheelDiameterMeters = 0.1; // 100mm
+
     public static final double kP = 0.00008,
         kI = 0,
         kD = 0,
@@ -83,7 +85,7 @@ public final class Constants {
         kV = 0.0018,
         kA = 0;
 
-    public static final double kNeutralZoneShootingRPM = 6000;
+    public static final double kNeutralZoneShootingSpeed = 20;
 
     public static final InterpolatingDoubleTreeMap kShotHoodAngleMap = new InterpolatingDoubleTreeMap();
     public static final InterpolatingDoubleTreeMap kShotFlywheelSpeedMap = new InterpolatingDoubleTreeMap();
@@ -121,7 +123,7 @@ public final class Constants {
 
     public static final RumblePack kRumbleScoreReady = new RumblePack(0.3, 0.2, Priority.MEDIUM);
     public static final double kUnjamPower = -2000;
-    public static final double kMaxRPM = 6250;
+    public static final double kMaxSpeed = 35;
 
     public static final Transform3d kShooterOffset = new Transform3d(0.05, 0, 0.45, new Rotation3d(0, 0, 0));
   }
