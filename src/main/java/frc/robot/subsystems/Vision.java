@@ -68,12 +68,13 @@ public class Vision {
         // --- Always attempt MT1 yaw correction on its own timer ---
         applyMegaTag1YawCorrection(swerveDrive, omegaDegPerSec);
 
+        SmartDashboard.putNumber("Vision/Omega", omegaDegPerSec);
         // --- Reject if spinning too fast for MT2 ---
         if (Math.abs(omegaDegPerSec) > VisionConstants.kMaxGyroRateDegPerSec) {
+            System.out.println("[VISION]: REJECTED FOR HIGH SPIN - " + Math.abs(omegaDegPerSec));
             SmartDashboard.putBoolean("Vision/MT2_Rejected_Spin", true);
             return false;
         }
-        System.out.println("[VISION]: REJECTED FOR HIGH SPIN - " + Math.abs(omegaDegPerSec));
         SmartDashboard.putBoolean("Vision/MT2_Rejected_Spin", false);
 
         PoseEstimate mt2 = getBotPoseEstimateMegaTag2();
