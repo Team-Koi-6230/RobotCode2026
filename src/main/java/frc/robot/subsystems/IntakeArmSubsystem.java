@@ -27,7 +27,6 @@ public class IntakeArmSubsystem extends SubsystemBase {
 
     private double targetAngle;
     private double _lastTargetAngle;
-    private int syncCounter = 0; // To avoid syncing every single frame
     private int currentStep;
     private double targetDistance;
     private boolean isMovingOut = true; // Added for the shake state machine
@@ -123,7 +122,6 @@ public class IntakeArmSubsystem extends SubsystemBase {
             m_motor.stopMotor();
         }
 
-        syncEncodersWithThreshold();
         updateState();
         if (_lastTargetAngle != targetAngle) {
             m_relativeEncoder.setPosition(m_absoluteEncoder.get());
@@ -138,28 +136,6 @@ public class IntakeArmSubsystem extends SubsystemBase {
 
         SmartDashboard.putNumber("Arm/Rel encoder angle", getAngle());
         SmartDashboard.putNumber("Arm/TargetAngle", targetAngle);
-    }
-
-    /**
-     * Re-syncs the relative encoder to the absolute encoder if they drift,
-     * but only if the arm is stationary to avoid PID "jumps".
-     */
-    private void syncEncodersWithThreshold() {
-        double currentRel = getAngle();
-        double currentAbs = m_absoluteEncoder.get();
-        double velocity = m_relativeEncoder.getVelocity();
-
-        // Only sync if stationary and error is > threshold (e.g. 0.02 units)
-        if (Math.abs(velocity) < 0.01 && Math.abs(currentRel - currentAbs) > 0.02
-                && Math.abs(targetAngle - getAngle()) < IntakeArmConstants.kTolerance) {
-            syncCounter++;
-            if (syncCounter > 10) {
-                m_relativeEncoder.setPosition(currentAbs);
-                syncCounter = 0;
-            }
-        } else {
-            syncCounter = 0;
-        }
     }
 
     private void updateState() {

@@ -1,7 +1,6 @@
 package frc.robot.subsystems;
 
 import frc.robot.Constants.VisionConstants;
-import frc.robot.Constants;
 import frc.robot.Constants.ShooterConstants;
 import frc.robot.Constants.SwerveDriveConstants;
 import frc.robot.FieldConstants;
@@ -10,7 +9,6 @@ import swervelib.SwerveDrive;
 import frc.robot.utils.AllianceFlipUtil;
 import frc.robot.utils.LimelightHelpers;
 import frc.robot.utils.LimelightHelpers.PoseEstimate;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.math.Matrix;
@@ -75,6 +73,7 @@ public class Vision {
             SmartDashboard.putBoolean("Vision/MT2_Rejected_Spin", true);
             return false;
         }
+        System.out.println("[VISION]: REJECTED FOR HIGH SPIN - " + Math.abs(omegaDegPerSec));
         SmartDashboard.putBoolean("Vision/MT2_Rejected_Spin", false);
 
         PoseEstimate mt2 = getBotPoseEstimateMegaTag2();
