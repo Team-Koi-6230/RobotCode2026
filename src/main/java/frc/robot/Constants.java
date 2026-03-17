@@ -43,14 +43,14 @@ public final class Constants {
     public static final double kAimingSpeedModifier = 2.5;
     public static final double kMaxStrafe = 2;
 
-    public static final double kSlowSpeedMax = 3;
-    public static final double kSlowAngularSpeedMax = Math.PI;
+    public static final double kSlowSpeedMax = 2;
+    public static final double kSlowAngularSpeedMax = Math.PI/2;
 
     public static final double kTargetErrorToleranceStatic = Math.toRadians(1.5);
     public static final double kTargetErrorToleranceMoving = Math.toRadians(3.0);
 
     // PID Gains
-    public static final double kPr = 10.0, kIr = 0, kDr = 0.75;
+    public static final double kPr = 7.5, kIr = 0, kDr = 0.75;
     public static final double kPrMoving = 36.0, kIrMoving = 0, kDrMoving = 1;
 
     public static final double kSr = 0.1;
@@ -85,7 +85,7 @@ public final class Constants {
         kV = 0.0018,
         kA = 0;
 
-    public static final double kNeutralZoneShootingSpeed = 20;
+    public static final double kNeutralZoneShootingSpeed = 18;
 
     public static final InterpolatingDoubleTreeMap kShotHoodAngleMap = new InterpolatingDoubleTreeMap();
     public static final InterpolatingDoubleTreeMap kShotFlywheelSpeedMap = new InterpolatingDoubleTreeMap();
@@ -102,21 +102,21 @@ public final class Constants {
 
     static {
       fillMap(kShotHoodAngleMap,
-          new double[] { 1.3, 2.0, 3.0, 4.0, 5.5 },
-          new double[] { 180, 180, 180, 180, 180 });
+          new double[] { 1.6, 2.2, 3.2},
+          new double[] { 1, 82, 110});
 
       fillMap(kShotFlywheelSpeedMap,
-          new double[] { 1.3, 2.0, 3.0, 4.0, 5.5 },
-          new double[] { 3400, 3400, 3400, 3400, 3400 });
+          new double[] { 1.6, 2.2, 3.2},
+          new double[] { 14.5, 15.7, 17.15});
 
       fillMap(kTimeOfFlightMap,
-          new double[] { 1.3, 2.0, 3.0, 4.0, 5.5 },
-          new double[] { 0.3, 0.57, 0.78, 0.9, 1 });
+          new double[] { 1.6, 2.2, 3.2 },
+          new double[] { 0.3, 0.57, 0.7});
     }
 
-    public static final double kMaxShootingDist = 4.0;
+    public static final double kMaxShootingDist = 2.2;
 
-    public static final double kRadialRPMComp = 150;
+    public static final double kRadialRPMComp = 0;
 
     public static final double kSidewaysVelocityDeadband = 0.15;
     public static final double kMeaningfullVelocity = 0.5;
@@ -135,7 +135,7 @@ public final class Constants {
     public static final double kMaxDeg = 180;
     public static final int kServoMin = 0;
     public static final int kServoMax = 180;
-    public static final int kStartingPos = 0;
+    public static final int kStartingPos = 180;
     public static final double kServoDelay = 0.04;
     public static final double kAllianceAngle = 0.0;
   }
@@ -163,11 +163,11 @@ public final class Constants {
 
   public static class IntakeRollerConstants {
     public static final int kMotorID = 18;
-    public static final double kIntakePower = 1400;
+    public static final double kIntakePower = 2000;
     public static final double kShootingPower = 460;
     public static final RumblePack kIntakeReadyRumble = new RumblePack(0.3, 0.2, Priority.LOW);
     public static final int kStallLimit = 40;
-    public static final double kP = 0, kI = 0, kD = 0, kS = 0.18, kV = 0.00835, kA = 0;
+    public static final double kP = 0.1, kI = 0, kD = 0, kS = 0.18, kV = 0.00835, kA = 0;
     public static final double kGearRatio = 4;
   }
 

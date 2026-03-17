@@ -158,7 +158,6 @@ public class ShooterSubsystem extends SubsystemBase {
     private void runTuningMode() {
         double debugSpeed = SmartDashboard.getNumber("Shooter/Debug Speed", 0);
         setTargetSurfaceSpeed(debugSpeed);
-        System.out.println("tuff tuning");
         if (debugSpeed == 0) {
             m_motor.stopMotor();
             state = ShooterState.COAST;
