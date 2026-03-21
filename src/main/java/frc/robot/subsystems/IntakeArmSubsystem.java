@@ -184,7 +184,8 @@ public class IntakeArmSubsystem extends SubsystemBase {
      * Boolean functions
      */
     private boolean isOpen() {
-        return Math.abs(IntakeArmConstants.kOpenAngle - getAngle()) < IntakeArmConstants.kTolerance;
+        //return Math.abs(IntakeArmConstants.kOpenAngle - getAngle()) < IntakeArmConstants.kTolerance;
+        return getAngle() > IntakeArmConstants.kOpenAngle - 5;
     }
 
     private boolean isClosed() {

@@ -97,7 +97,7 @@ public class Superstructure extends SubsystemBase {
         shooterSubsystem.setSwerveSubsystem(drivebase);
         feederSubsystem = new FeederSubsystem();
         intakeArmSubsystem = new IntakeArmSubsystem();
-        intakeRollerSubsystem = new IntakeRollerSubsytem()
+        intakeRollerSubsystem = new IntakeRollerSubsytem();
         hoodSubsystem = new HoodSubsystem();
 
         SmartDashboard.putBoolean("SwerveControl/slow mode", isSlowMode);
