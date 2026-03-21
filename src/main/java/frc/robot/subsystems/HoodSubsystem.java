@@ -43,19 +43,20 @@ public class HoodSubsystem extends SubsystemBase {
         double clamped = MathUtil.clamp(
                 degrees,
                 Constants.HoodConstants.kMinDeg,
-                Constants.HoodConstants.kMaxDeg);
-
-        if (this.targetAngle != Double.NaN && Math.abs(clamped - this.targetAngle) < 0.05) {
-            return;
-        }
+                Constants.HoodConstants.kMaxDeg);  
 
         this.targetAngle = clamped;
 
         double normalized = (targetAngle - Constants.HoodConstants.kMinDeg) /
                 (Constants.HoodConstants.kMaxDeg - Constants.HoodConstants.kMinDeg);
 
+        System.out.println(normalized + " | " + (1.0 - normalized));
+
         servoLeft.set(normalized);
         servoRight.set(1.0 - normalized);
+
+        SmartDashboard.putNumber("hood/left", normalized);
+        SmartDashboard.putNumber("hood/right", 1.0 - normalized);
 
         lastSetTime = Timer.getFPGATimestamp();
         state = HoodState.MOVING;
@@ -106,7 +107,7 @@ public class HoodSubsystem extends SubsystemBase {
     }
 
     private void prepareHood() {
-        if (Vision.getInstance().isInAllianceZone()) {
+        if (!Vision.getInstance().isInAllianceZone()) {
             setAngle(Constants.HoodConstants.kAllianceAngle);
         } else {
             setAngle(Vision.getInstance().getHoodAngle());
@@ -128,8 +129,6 @@ public class HoodSubsystem extends SubsystemBase {
                         : HoodState.AT_TARGET;
             }
         }
-
-        SmartDashboard.putNumber("Servo/position", servoLeft.get());
 
         if (Superstructure.getInstance().isManualMode())
             return;

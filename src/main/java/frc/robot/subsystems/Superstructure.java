@@ -84,7 +84,7 @@ public class Superstructure extends SubsystemBase {
     private final HoodSubsystem hoodSubsystem;
     private final SwerveSubsystem drivebase;
 
-    private boolean isSlowMode = false;
+    private boolean isSlowMode = true;
 
     private Superstructure() {
         drivebase = new SwerveSubsystem(
