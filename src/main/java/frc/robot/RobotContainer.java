@@ -58,7 +58,6 @@ public class RobotContainer {
                 NamedCommands.registerCommand("Intake", superstructure.setINTAKINGstate());
                 NamedCommands.registerCommand("Prepare shooting", superstructure.setPREPARING_SHOOTERstate());
                 NamedCommands.registerCommand("Shoot", superstructure.setSHOOTINGstate());
-                NamedCommands.registerCommand("L1 Climb", superstructure.autonClimb());
                 NamedCommands.registerCommand("Idle", superstructure.setIDLEstate());
                 NamedCommands.registerCommand("Home", superstructure.setHOMEstate());
         }
@@ -73,6 +72,9 @@ public class RobotContainer {
                                                 },
                                                 drivebase)
                                                 .withTimeout(4.0));
+
+                autonChooser.addOption("left trench", drivebase.getAutonomousCommand("left trench"));
+                autonChooser.addOption("right trench", drivebase.getAutonomousCommand("right trench"));
 
                 SmartDashboard.putData("Auton/Chooser", autonChooser);
         }
