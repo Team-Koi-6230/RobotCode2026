@@ -121,22 +121,6 @@ public class RobotContainer {
                                 .and(manualMode)
                                 .onTrue(new InstantCommand(drivebase::zeroGyro));
 
-                // driverController.x()
-                // .and(manualMode)
-                // .onTrue(superstructure.getClimberSubsystem().extendClimberHangCommand());
-
-                // driverController.y()
-                // .and(manualMode)
-                // .onTrue(superstructure.getClimberSubsystem().closeClimberGroundCommand());
-
-                // driverController.b()
-                // .and(manualMode)
-                // .onTrue(superstructure.getClimberSubsystem().extendClimberGroundCommand());
-
-                // driverController.a()
-                // .and(manualMode)
-                // .onTrue(superstructure.getClimberSubsystem().extendClimberHangCommand());
-
                 driverController.leftTrigger()
                                 .onTrue(instantCommand(
                                                 superstructure.getIntakeArmSubsystem()::OpenArm))

@@ -80,7 +80,6 @@ public class Superstructure extends SubsystemBase {
     private final FeederSubsystem feederSubsystem;
     private final IntakeArmSubsystem intakeArmSubsystem;
     private final IntakeRollerSubsytem intakeRollerSubsystem;
-    // private final ClimberSubsystem climberSubsystem;
     private final HoodSubsystem hoodSubsystem;
     private final SwerveSubsystem drivebase;
 
@@ -98,8 +97,7 @@ public class Superstructure extends SubsystemBase {
         shooterSubsystem.setSwerveSubsystem(drivebase);
         feederSubsystem = new FeederSubsystem();
         intakeArmSubsystem = new IntakeArmSubsystem();
-        intakeRollerSubsystem = new IntakeRollerSubsytem();
-        // climberSubsystem = new ClimberSubsystem();
+        intakeRollerSubsystem = new IntakeRollerSubsytem()
         hoodSubsystem = new HoodSubsystem();
 
         SmartDashboard.putBoolean("SwerveControl/slow mode", isSlowMode);
@@ -263,10 +261,6 @@ public class Superstructure extends SubsystemBase {
         return intakeRollerSubsystem;
     }
 
-    // public ClimberSubsystem getClimberSubsystem() {
-    // return climberSubsystem;
-    // }
-
     public HoodSubsystem getHoodSubsystem() {
         return hoodSubsystem;
     }
@@ -294,10 +288,6 @@ public class Superstructure extends SubsystemBase {
     public IntakeRollerState getIntakeRollerState() {
         return intakeRollerSubsystem.getState();
     }
-
-    // public ClimberState getClimberState() {
-    // return climberSubsystem.getState();
-    // }
 
     public HoodState getHoodState() {
         return hoodSubsystem.getState();
