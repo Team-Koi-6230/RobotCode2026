@@ -44,7 +44,7 @@ public final class Constants {
     public static final double kMaxStrafe = 2;
 
     public static final double kSlowSpeedMax = 2;
-    public static final double kSlowAngularSpeedMax = Math.PI/2;
+    public static final double kSlowAngularSpeedMax = Math.PI;
 
     public static final double kTargetErrorToleranceStatic = Math.toRadians(1.5);
     public static final double kTargetErrorToleranceMoving = Math.toRadians(3.0);

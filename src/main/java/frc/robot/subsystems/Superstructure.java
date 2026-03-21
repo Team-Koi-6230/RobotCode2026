@@ -71,7 +71,6 @@ public class Superstructure extends SubsystemBase {
     private WantedState previousWantedState = WantedState.IDLE;
     private CurrentState currentState = CurrentState.IDLE;
 
-
     private final RumbleSubsystem rumbleSubsystem;
     @SuppressWarnings("unused")
     private final GameDataSubsystem gameDataSubsystem;
@@ -83,7 +82,8 @@ public class Superstructure extends SubsystemBase {
     private final HoodSubsystem hoodSubsystem;
     private final SwerveSubsystem drivebase;
 
-    private boolean isSlowMode = true;
+    private boolean isSlowMode = false;
+    private boolean lastDashboardValue = false;
 
     private Superstructure() {
         drivebase = new SwerveSubsystem(
@@ -105,12 +105,18 @@ public class Superstructure extends SubsystemBase {
 
     @Override
     public void periodic() {
+        boolean dashboardValue = SmartDashboard.getBoolean("SwerveControl/slow mode", isSlowMode);
+
+        if (dashboardValue != lastDashboardValue) {
+        isSlowMode = dashboardValue;
+    }
+
         if (wantedState != previousWantedState) {
             onWantedStateChange();
             previousWantedState = wantedState;
         }
 
-        isSlowMode = SmartDashboard.getBoolean("SwerveControl/slow mode", false);
+        SmartDashboard.putBoolean("SwerveControl/slow mode", isSlowMode);
 
         updateCurrentState();
 
@@ -118,6 +124,8 @@ public class Superstructure extends SubsystemBase {
         SmartDashboard.putString("superstructure/Current", currentState.name());
         SmartDashboard.putBoolean(
                 "superstructure/Superstate Mode", isSuperstateMode());
+
+        lastDashboardValue = SmartDashboard.getBoolean("SwerveControl/slow mode", isSlowMode);
     }
 
     private void onWantedStateChange() {
@@ -228,14 +236,14 @@ public class Superstructure extends SubsystemBase {
     }
 
     public Command toggleControlState() {
-    return runOnce(() -> {
-        if (isSuperstateMode()) {
-            setManualMode();
-        } else {
-            setSuperstateMode();
-        }
-    });
-}
+        return runOnce(() -> {
+            if (isSuperstateMode()) {
+                setManualMode();
+            } else {
+                setSuperstateMode();
+            }
+        });
+    }
 
     public WantedState getWantedState() {
         return wantedState;
@@ -307,5 +315,9 @@ public class Superstructure extends SubsystemBase {
 
     public boolean getIsSlowMode() {
         return isSlowMode;
+    }
+
+    public void setIsSlowMode(boolean isSlow) {
+        this.isSlowMode = isSlow;
     }
 }

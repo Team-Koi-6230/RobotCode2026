@@ -115,6 +115,13 @@ public class RobotContainer {
                 driverController.povUp().and(superstateMode)
                                 .onTrue(superstructure.setUNJAMstate());
 
+                operatorController.a()
+                                .onTrue(new InstantCommand(() -> {
+                                        System.out.println("before: " + superstructure.getIsSlowMode());
+                                        superstructure.setIsSlowMode(!superstructure.getIsSlowMode());
+                                        System.out.println("after: " + superstructure.getIsSlowMode());
+                                }));
+
                 ////////////////////////////////////////////////////////////////////
 
                 driverController.povRight()
@@ -169,9 +176,6 @@ public class RobotContainer {
                 
                 operatorController.y().onTrue(superstructure.getHoodSubsystem().setHoodAngleCommand(45))
                                 .onFalse(superstructure.getHoodSubsystem().setHoodAngleCommand(0));
-
-                driverController.y().onTrue(superstructure.getHoodSubsystem().setHoodAngleCommand(0))
-                                .onFalse(superstructure.getHoodSubsystem().setHoodAngleCommand(40));
 
                 driverController.povLeft()
                                 .onTrue(superstructure.toggleControlState());

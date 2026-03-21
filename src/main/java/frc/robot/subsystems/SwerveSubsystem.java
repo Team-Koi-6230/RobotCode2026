@@ -25,6 +25,8 @@ import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.FieldObject2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -532,11 +534,22 @@ public class SwerveSubsystem extends SubsystemBase {
      * Vision computes after lead compensation.
      */
     public void driveBasedOnState(ChassisSpeeds velocity) {
-        if (Superstructure.getInstance().getIsSlowMode()) {
-            velocity.omegaRadiansPerSecond = Math.min(velocity.omegaRadiansPerSecond, SwerveDriveConstants.kSlowAngularSpeedMax);
-            velocity.vxMetersPerSecond = Math.min(velocity.vxMetersPerSecond, SwerveDriveConstants.kSlowSpeedMax);
-            velocity.vyMetersPerSecond = Math.min(velocity.vyMetersPerSecond, SwerveDriveConstants.kSlowSpeedMax);
+        if (Superstructure.getInstance().getIsSlowMode() || RobotController.getBatteryVoltage() < 10.0) {
+        
+        double linearSpeed = Math.hypot(velocity.vxMetersPerSecond, velocity.vyMetersPerSecond);
+        
+        if (linearSpeed > SwerveDriveConstants.kSlowSpeedMax) {
+            double scale = SwerveDriveConstants.kSlowSpeedMax / linearSpeed;
+            velocity.vxMetersPerSecond *= scale;
+            velocity.vyMetersPerSecond *= scale;
         }
+
+        velocity.omegaRadiansPerSecond = MathUtil.clamp(
+            velocity.omegaRadiansPerSecond, 
+            -SwerveDriveConstants.kSlowAngularSpeedMax, 
+            SwerveDriveConstants.kSlowAngularSpeedMax
+        );
+    }
 
         state = SwerveState.TELEOP;
 
