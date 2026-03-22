@@ -4,6 +4,7 @@ import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import frc.robot.Constants;
 
 public class RumbleSubsystem extends SubsystemBase {
     public enum Priority {
@@ -43,6 +44,10 @@ public class RumbleSubsystem extends SubsystemBase {
     public void rumble(RumblePack rumblePack) {
         rumble(rumblePack.strength, rumblePack.duration, rumblePack.priority);
     } 
+
+    public void changeStateRumble() {
+        rumble(Constants.OperatorConstants.kStateChangeRumble);
+    }
 
     private void setRumble(double strength) {
         if (m_driverController == null || m_operatorController == null) return;

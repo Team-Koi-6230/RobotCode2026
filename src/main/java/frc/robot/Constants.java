@@ -19,6 +19,8 @@ public final class Constants {
     public static final RumblePack kGameShiftRumble = new RumblePack(0.7, 0.5, Priority.HIGH);
     public static final int kTeleopInterval = 25;
     public static final int kEndGameTime = 30;
+
+    public static final RumblePack kStateChangeRumble = new RumblePack(0.3, 0.5, Priority.MEDIUM);
   }
 
   public static class VisionConstants {

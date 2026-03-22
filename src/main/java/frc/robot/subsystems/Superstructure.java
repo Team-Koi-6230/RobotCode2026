@@ -5,6 +5,7 @@ import java.io.File;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
@@ -148,8 +149,11 @@ public class Superstructure extends SubsystemBase {
                 && intakeArmSubsystem.isReady()
                 && intakeRollerSubsystem.isReady()
                 && feederSubsystem.isReady()
-                // && climberSubsystem.isReady()
                 && drivebase.isReady();
+
+        if (currentState.ordinal() != wantedState.ordinal() && currentState == CurrentState.IDLE && wantedState != WantedState.IDLE && ready) {
+            rumbleSubsystem.changeStateRumble();
+        }
 
         currentState = ready
                 ? CurrentState.valueOf(wantedState.name())
