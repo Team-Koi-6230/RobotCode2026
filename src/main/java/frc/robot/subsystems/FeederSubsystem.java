@@ -160,7 +160,7 @@ public class FeederSubsystem extends SubsystemBase {
     }
 
     public boolean isReady() {
-        if (currentWantedState != WantedState.SHOOTING || currentWantedState == WantedState.SHOOTING_AND_INTAKING || currentWantedState != WantedState.UNJAM) {
+        if (currentWantedState != WantedState.SHOOTING && currentWantedState != WantedState.SHOOTING_AND_INTAKING && currentWantedState != WantedState.UNJAM) {
             return state == FeederState.IDLE;
         }
         return state == FeederState.SPINNING;
