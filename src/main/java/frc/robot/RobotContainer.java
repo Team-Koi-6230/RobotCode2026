@@ -1,197 +1,107 @@
 package frc.robot;
 
-import java.util.function.BooleanSupplier;
-
-import com.pathplanner.lib.auto.NamedCommands;
-
+import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-
-import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.RunCommand;
-import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.Constants.OperatorConstants;
-import frc.robot.subsystems.Superstructure;
-import frc.robot.subsystems.SwerveSubsystem;
-import frc.robot.utils.RumbleSubsystem;
-
-import swervelib.SwerveInputStream;
+import frc.robot.subsystems.drive.Drive;
+import frc.robot.subsystems.intake.Intake;
+import frc.robot.subsystems.shooter.Shooter;
+import frc.robot.subsystems.vision.Vision;
+import team6230.koiupstream.superstates.Superstate;
+import team6230.koiupstream.utils.KoiController;
+import team6230.koiupstream.utils.SwerveInputStream;
 
 public class RobotContainer {
-        private final CommandXboxController driverController;
-        private final CommandXboxController operatorController;
 
-        private final Superstructure superstructure;
-        private final SwerveSubsystem drivebase;
-        private final RumbleSubsystem rumbleSubsystem;
+        private Superstate superstate = Superstate.getInstance();
+        private static KoiController driverController = new KoiController(0, 0.05, 10, 10);
 
-        private final SwerveInputStream driveAngularVelocity;
+        // private final LoggedDashboardChooser<Command> autoChooser;
 
-        private final SendableChooser<Command> autonChooser = new SendableChooser<>();
+        private Trigger IntakeButton = driverController.leftTrigger();
+        private Trigger HomeButton = driverController.a();
+        private Trigger PreparingShooterButton = driverController.rightBumper();
+        private Trigger ShootingButton = driverController.rightTrigger();
+        private Trigger UnjamButton = driverController.povUp();
+
+        private static SwerveInputStream swerveInputStream = new SwerveInputStream(driverController::getSwerveDrive,
+                        driverController::getSwerveStrafe, driverController::getSwerveTurn);
+
+        private static Drive drive = new Drive(swerveInputStream);
+
+        @SuppressWarnings("unused")
+        private Intake intake = new Intake();
+        @SuppressWarnings("unused")
+        private Shooter shooter = new Shooter();
+        @SuppressWarnings("unused")
+        private Vision vision = new Vision();
 
         public RobotContainer() {
-                driverController = new CommandXboxController(OperatorConstants.kDriverControllerPort);
-                operatorController = new CommandXboxController(OperatorConstants.kOperatorControllerPort);
+                // autoChooser = new LoggedDashboardChooser<>("Auto Choices",
+                // AutoBuilder.buildAutoChooser());
 
-                superstructure = Superstructure.getInstance();
-                drivebase = superstructure.getDrivebase();
-                rumbleSubsystem = superstructure.getRumbleSubsystem();
-
-                driveAngularVelocity = SwerveInputStream.of(
-                                drivebase.getSwerveDrive(),
-                                () -> -driverController.getLeftY(),
-                                () -> -driverController.getLeftX())
-                                .withControllerRotationAxis(() -> -driverController.getRightX())
-                                .deadband(OperatorConstants.kDeadband)
-                                .scaleTranslation(1.0)
-                                .allianceRelativeControl(true);
-
-                registerAutonCommands();
-                setupAutons();
                 configureBindings();
         }
 
-        private void registerAutonCommands() {
-                NamedCommands.registerCommand("Intake", superstructure.setINTAKINGstate());
-                NamedCommands.registerCommand("Prepare shooting", superstructure.setPREPARING_SHOOTERstate());
-                NamedCommands.registerCommand("Shoot", superstructure.setSHOOTINGstate());
-                NamedCommands.registerCommand("Idle", superstructure.setIDLEstate());
-                NamedCommands.registerCommand("Home", superstructure.setHOMEstate());
-        }
-
-        private void setupAutons() {
-                autonChooser.setDefaultOption(
-                                "Get Off Line",
-                                new RunCommand(
-                                                () -> {
-                                                        drivebase.zeroGyro();
-                                                        drivebase.drive(new ChassisSpeeds(1.0, 0.0, 0.0));
-                                                },
-                                                drivebase)
-                                                .withTimeout(4.0));
-
-                autonChooser.addOption("left trench", drivebase.getAutonomousCommand("left trench"));
-                autonChooser.addOption("right trench", drivebase.getAutonomousCommand("right trench"));
-
-                SmartDashboard.putData("Auton/Chooser", autonChooser);
-        }
-
         private void configureBindings() {
-                BooleanSupplier manualMode = superstructure::isManualMode;
-                BooleanSupplier superstateMode = superstructure::isSuperstateMode;
-                rumbleSubsystem.setControllers(driverController, operatorController);
+                superstate.setDefaultWantedState(RobotState.IDLE);
 
-                drivebase.setDefaultCommand(drivebase.driveFieldOriented(driveAngularVelocity));
-                superstructure.setDefaultCommand(superstructure.setIDLEstate());
+                IntakeButton
+                                .and(PreparingShooterButton.negate()).and(ShootingButton.negate())
+                                .whileTrue(superstate.setWantedSuperstateCommand(RobotState.INTAKING));
 
-                Trigger intakeBtn = driverController.leftTrigger();
-                Trigger prepBtn = driverController.rightBumper();
-                Trigger shootBtn = driverController.rightTrigger();
+                PreparingShooterButton
+                                .and(ShootingButton.negate()).and(IntakeButton.negate())
+                                .whileTrue(superstate.setWantedSuperstateCommand(RobotState.PREPARING_SHOOTER));
 
-                intakeBtn.and(prepBtn).and(superstateMode)
-                                .whileTrue(superstructure.setPREPARING_SHOOTER_AND_INTAKINGshooting());
+                PreparingShooterButton
+                                .and(ShootingButton.negate()).and(IntakeButton)
+                                .whileTrue(superstate
+                                                .setWantedSuperstateCommand(RobotState.PREPARING_SHOOTER_AND_INTAKING));
 
-                intakeBtn.and(shootBtn).and(superstateMode)
-                                .whileTrue(superstructure.setSHOOTING_AND_INTAKINGshooting());
+                ShootingButton
+                                .and(IntakeButton.negate())
+                                .whileTrue(superstate.setWantedSuperstateCommand(RobotState.SHOOTING));
 
-                prepBtn.and(superstateMode).and(intakeBtn.negate())
-                                .whileTrue(superstructure.setPREPARING_SHOOTERstate());
+                ShootingButton
+                                .and(IntakeButton)
+                                .whileTrue(superstate.setWantedSuperstateCommand(RobotState.SHOOTING_AND_INTAKING));
 
-                shootBtn.and(superstateMode).and(intakeBtn.negate())
-                                .whileTrue(superstructure.setSHOOTINGstate());
+                UnjamButton
+                                .whileTrue(superstate.setWantedSuperstateCommand(RobotState.UNJAM));
 
-                intakeBtn.and(superstateMode).and(prepBtn.negate()).and(shootBtn.negate())
-                                .whileTrue(superstructure.setINTAKINGstate());
+                HomeButton
+                                .whileTrue(superstate.setWantedSuperstateCommand(RobotState.HOME));
 
-                driverController.b().and(superstateMode)
-                                .onTrue(superstructure.setL1_CLIMBstate());
-
-                driverController.x().and(superstateMode)
-                                .whileTrue(superstructure.setHOMEstate());
-
-                driverController.povUp().and(superstateMode)
-                                .onTrue(superstructure.setUNJAMstate());
-
-                operatorController.a()
-                                .onTrue(new InstantCommand(() -> {
-                                        System.out.println("before: " + superstructure.getIsSlowMode());
-                                        superstructure.setIsSlowMode(!superstructure.getIsSlowMode());
-                                        System.out.println("after: " + superstructure.getIsSlowMode());
-                                }));
-
-                ////////////////////////////////////////////////////////////////////
-
-                driverController.povRight()
-                                .and(manualMode)
-                                .onTrue(new InstantCommand(drivebase::zeroGyro));
-
-                driverController.leftTrigger()
-                                .onTrue(instantCommand(
-                                                superstructure.getIntakeArmSubsystem()::OpenArm))
-                                .onFalse(instantCommand(
-                                                superstructure.getIntakeArmSubsystem()::CloseArm));
-
-                driverController.rightBumper()
-                                .and(manualMode)
-                                .onTrue(superstructure
-                                                .getIntakeRollerSubsystem()
-                                                .rollerSpinCommand(Constants.IntakeRollerConstants.kIntakePower))
-                                .onFalse(superstructure
-                                                .getIntakeRollerSubsystem()
-                                                .rollerSpinCommand(0.0));
-
-
-                driverController.rightTrigger()
-                                .and(manualMode)
-                                .onTrue(superstructure
-                                                .getShooterSubsystem()
-                                                .setVelocityCommand(6000))
-                                .onFalse(superstructure
-                                                .getShooterSubsystem()
-                                                .setVelocityCommand(0));
-
-                driverController.leftBumper()
-                                .and(manualMode)
-                                .onTrue(superstructure
-                                                .getFeederSubsystem()
-                                                .feederSpinCommand(1500))
-                                .onFalse(superstructure
-                                                .getFeederSubsystem()
-                                                .feederSpinCommand(0));
-
-                operatorController.a()
-                                .and(manualMode)
-                                .whileTrue(superstructure
-                                                .getHoodSubsystem()
-                                                .joystickHoodControl(() -> -operatorController.getRightY()));
-
-                driverController.povUp()
-                                .and(manualMode)
-                                .onTrue(superstructure.getFeederSubsystem().feederSpinCommand(-1500))
-                                .onFalse(superstructure.getFeederSubsystem().feederSpinCommand(0));
-
-                
-                operatorController.y().onTrue(superstructure.getHoodSubsystem().setHoodAngleCommand(45))
-                                .onFalse(superstructure.getHoodSubsystem().setHoodAngleCommand(0));
-
-                driverController.povLeft()
-                                .onTrue(superstructure.toggleControlState());
-
+                driverController.leftBumper().onTrue(Commands.runOnce(() -> {
+                        drive.toggleShouldRoundOrientation();
+                }));
         }
 
         public Command getAutonomousCommand() {
-                return autonChooser.getSelected();
+                // return autoChooser.get();
+                return Commands.runOnce(
+                                () -> drive.setPose(
+                                                new Pose2d(drive.getPose().getTranslation(), Rotation2d.kZero)),
+                                drive);
         }
 
-        private static InstantCommand instantCommand(Runnable runnable) {
-                return new InstantCommand(runnable) {
-                        @Override
-                        public boolean runsWhenDisabled() {
-                                return true;
-                        }
-                };
+        public static Pose2d getRobotPose() {
+                return drive.getPose();
+        }
+
+        public static ChassisSpeeds getRobotVelocity() {
+                return drive.getChassisSpeeds();
+        }
+
+        public static void addVisionMeasurement(Pose2d visionRobotPoseMeters, double timestampSeconds,
+                        Matrix<N3, N1> visionMeasurementStdDevs) {
+                drive.addVisionMeasurement(visionRobotPoseMeters, timestampSeconds, visionMeasurementStdDevs);
         }
 }
