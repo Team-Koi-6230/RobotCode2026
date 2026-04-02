@@ -97,6 +97,9 @@ public class DriveConstants {
         public static final double[] kRoundedOrientations = new double[] { 0, Math.PI / 2, Math.PI,
                         Math.PI + (Math.PI / 2) };
 
+        public static final double kFalloffPercent = 0.075;
+        public static final int kFalloffExponent = 10;
+
         public static final double robotMassKg = 45;
         public static final double robotMOI = 6.883;
         public static final double wheelCOF = 1.2;
