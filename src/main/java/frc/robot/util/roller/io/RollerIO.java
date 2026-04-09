@@ -12,7 +12,6 @@ public interface RollerIO extends UpstreamIO<RollerIOInputsAutoLogged> {
         public double radsPerSec = 0.0;
         public double[] rollerCurrent = { 0.0 };
     }
-    
 
     public default void runVoltage(double volt) {
     };

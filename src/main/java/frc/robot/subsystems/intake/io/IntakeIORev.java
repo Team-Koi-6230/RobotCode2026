@@ -18,16 +18,16 @@ import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import frc.robot.RobotMap;
 import frc.robot.subsystems.intake.IntakeConstants;
 import frc.robot.util.SparkPIDF;
+import team6230.koiupstream.utils.AbsoluteEncoderDIO;
 
 public class IntakeIORev implements IntakeIO {
-        private SparkMax m_pivot;
-        private RelativeEncoder m_relativeEncoder;
-        private DutyCycleEncoder m_absoluteEncoder;
-        private SparkClosedLoopController m_pivotController;
+        private final SparkMax m_pivot;
+        private final RelativeEncoder m_relativeEncoder;
+        private final AbsoluteEncoderDIO m_absoluteEncoder;
+        private final SparkClosedLoopController m_pivotController;
 
         private Rotation2d _targetAngle = IntakeConstants.kMaxAngle;
 
@@ -38,9 +38,10 @@ public class IntakeIORev implements IntakeIO {
 
                 m_relativeEncoder = m_pivot.getEncoder();
 
-                m_absoluteEncoder = new DutyCycleEncoder(RobotMap.DIO.kIntakePivotThroughBoreID,
-                                360 / IntakeConstants.kPivotShaftToPivotGearRatio,
-                                IntakeConstants.kThroughBoreOffset);
+                m_absoluteEncoder = new AbsoluteEncoderDIO(RobotMap.DIO.kIntakePivotThroughBoreID)
+                                .setEncoderOffset(IntakeConstants.kThroughBoreOffset)
+                                .setMinimumValue(IntakeConstants.kThroughBoreMin)
+                                .setInverted(IntakeConstants.kEncoderInverted);
 
                 var pivotConfig = new SparkMaxConfig();
                 pivotConfig
@@ -88,13 +89,13 @@ public class IntakeIORev implements IntakeIO {
 
                 m_pivotController = m_pivot.getClosedLoopController();
 
-                tryUntilOk(m_pivot, 5, () -> m_relativeEncoder.setPosition(getAbsoluteEncoderDeg()));
+                tryUntilOk(m_pivot, 5, () -> m_relativeEncoder.setPosition(getAbsoluteEncoder().getDegrees()));
         }
 
         @Override
         public void updateInputs(IntakeIOInputsAutoLogged inputs) {
-                inputs.absolutePivotAngleDeg = getAbsoluteEncoderDeg();
-                inputs.absolutePivotAngleRad = Math.toRadians(getAbsoluteEncoderDeg());
+                inputs.absolutePivotAngleDeg = getAbsoluteEncoder().getDegrees();
+                inputs.absolutePivotAngleRad = getAbsoluteEncoder().getRadians();
                 ifOk(m_pivot, m_relativeEncoder::getPosition, (value) -> Math.abs(_targetAngle.getDegrees() - value));
                 ifOk(
                                 m_pivot,
@@ -144,11 +145,8 @@ public class IntakeIORev implements IntakeIO {
                 tryToSetPidfUntillOkTune(m_pivot, 5, pidf);
         }
 
-        private double getAbsoluteEncoderDeg() {
-                var raw = m_absoluteEncoder.get();
-
-                return IntakeConstants.kEncoderInverted ? (360 / IntakeConstants.kPivotShaftToPivotGearRatio - raw)
-                                : raw;
+        private Rotation2d getAbsoluteEncoder() {
+                return m_absoluteEncoder.getPosition();
         }
 
 }
