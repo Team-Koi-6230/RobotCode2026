@@ -1,7 +1,7 @@
 {
     "fileName": "KoiUpstream.json",
     "name": "KoiUpstream",
-    "version": "26.0",
+    "version": "26.1.0",
     "uuid": "ab5d7af1-b621-4e44-9f58-f679415f8118",
     "frcYear": "2026",
     "mavenUrls": [
@@ -13,7 +13,7 @@
         {
             "groupId": "team6230",
             "artifactId": "KoiUpstream",
-            "version": "26.0"
+            "version": "26.1.0"
         }
     ],
     "jniDependencies": [],

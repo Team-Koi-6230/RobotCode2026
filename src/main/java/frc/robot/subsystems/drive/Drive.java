@@ -404,4 +404,9 @@ public class Drive extends UpstreamDrivebase<RobotState> {
         break;
     }
   }
+
+  @Override
+  public boolean isReady() {
+    return true;
+  }
 }
