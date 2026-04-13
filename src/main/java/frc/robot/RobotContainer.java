@@ -3,6 +3,8 @@ package frc.robot;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
+import com.pathplanner.lib.commands.PathPlannerAuto;
 
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -30,10 +32,10 @@ public class RobotContainer {
 
         private final LoggedDashboardChooser<Command> autoChooser;
 
-        private Trigger IntakeButton = driverController.y();
+        private Trigger IntakeButton = driverController.leftTrigger();
         private Trigger HomeButton = driverController.a();
         private Trigger PreparingShooterButton = driverController.rightBumper();
-        private Trigger ShootingButton = driverController.b();
+        private Trigger ShootingButton = driverController.rightTrigger();
         private Trigger UnjamButton = driverController.povUp();
 
         private boolean isShooting = false;
@@ -50,9 +52,24 @@ public class RobotContainer {
         private Vision vision = new Vision();
 
         public RobotContainer() {
+                NamedCommands.registerCommand("Shoot", Commands.run(() -> {
+                        if (isReadyToShoot()) {
+                                superstate.setWantedSuperstate(RobotState.SHOOTING);
+                                return;
+                        }
+                        if (isShooting) {
+                                superstate.setWantedSuperstate(RobotState.SHOOTING_RECOVERY);
+                                return;
+                        }
+                        superstate.setWantedSuperstate(RobotState.PREPARING_SHOOTER);
+                }, superstate));
+                NamedCommands.registerCommand("Intake", superstate.setWantedSuperstateCommand(RobotState.INTAKING));
+                NamedCommands.registerCommand("Idle", superstate.setWantedSuperstateCommand(RobotState.IDLE));
 
                 autoChooser = new LoggedDashboardChooser<>("Auto Choices",
                                 AutoBuilder.buildAutoChooser());
+
+                autoChooser.addOption("Attack Middle (right)", new PathPlannerAuto("attackMiddle", true));
 
                 autoChooser.addDefaultOption("resetOdometry", Commands.runOnce(
                                 () -> {
@@ -68,7 +85,7 @@ public class RobotContainer {
         }
 
         private void configureBindings() {
-                superstate.setDefaultWantedState(RobotState.IDLE);
+                // superstate.setDefaultWantedState(RobotState.IDLE);
 
                 IntakeButton
                                 .and(PreparingShooterButton.negate()).and(ShootingButton.negate())

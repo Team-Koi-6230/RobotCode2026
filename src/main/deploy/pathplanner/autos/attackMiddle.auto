@@ -7,7 +7,19 @@
         {
           "type": "path",
           "data": {
-            "pathName": "right trench"
+            "pathName": "attack middle"
+          }
+        },
+        {
+          "type": "wait",
+          "data": {
+            "waitTime": 4.0
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "attack middle"
           }
         },
         {
