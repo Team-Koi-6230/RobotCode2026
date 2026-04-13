@@ -36,6 +36,8 @@ public class RobotContainer {
         private Trigger ShootingButton = driverController.b();
         private Trigger UnjamButton = driverController.povUp();
 
+        private boolean isShooting = false;
+
         private static SwerveInputStream swerveInputStream = new SwerveInputStream(driverController::getSwerveDrive,
                         driverController::getSwerveStrafe, driverController::getSwerveTurn);
 
@@ -89,6 +91,12 @@ public class RobotContainer {
                 ShootingButton
                                 .and(IntakeButton.negate())
                                 .and(this::isUnpreparedToShoot)
+                                .and(() -> isShooting)
+                                .whileTrue(superstate.setWantedSuperstateCommand(RobotState.SHOOTING_RECOVERY));
+                ShootingButton
+                                .and(IntakeButton.negate())
+                                .and(this::isUnpreparedToShoot)
+                                .and(() -> !isShooting)
                                 .whileTrue(superstate.setWantedSuperstateCommand(RobotState.PREPARING_SHOOTER));
 
                 ShootingButton
@@ -111,6 +119,15 @@ public class RobotContainer {
                 driverController.leftBumper().onTrue(Commands.runOnce(() -> {
                         drive.toggleShouldRoundOrientation();
                 }));
+
+                superstate.subscribeToStateMachine((s) -> {
+                        if (s.ordinal() == RobotState.SHOOTING.ordinal()
+                                        || s.ordinal() == RobotState.SHOOTING_RECOVERY.ordinal()) {
+                                isShooting = true;
+                        } else {
+                                isShooting = false;
+                        }
+                }, () -> true);
         }
 
         public Command getAutonomousCommand() {

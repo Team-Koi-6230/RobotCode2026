@@ -123,6 +123,7 @@ public class Drive extends UpstreamDrivebase<RobotState> {
     registerDefaultDrive(this::defaultDrive);
     registerDriveMode(RobotState.PREPARING_SHOOTER, this::shootingDrive);
     registerDriveMode(RobotState.SHOOTING, this::shootingDrive);
+    registerDriveMode(RobotState.SHOOTING_RECOVERY, this::shootingDrive);
   }
 
   private ChassisSpeeds defaultDrive(DoubleSupplier xSupplier, DoubleSupplier ySupplier, DoubleSupplier omegaSupplier) {
