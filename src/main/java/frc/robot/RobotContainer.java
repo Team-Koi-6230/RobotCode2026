@@ -30,7 +30,7 @@ public class RobotContainer {
 
         private final LoggedDashboardChooser<Command> autoChooser;
 
-        private Trigger IntakeButton = driverController.leftTrigger();
+        private Trigger IntakeButton = driverController.y();
         private Trigger HomeButton = driverController.a();
         private Trigger PreparingShooterButton = driverController.rightBumper();
         private Trigger ShootingButton = driverController.b();

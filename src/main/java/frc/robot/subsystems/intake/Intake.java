@@ -145,8 +145,10 @@ public class Intake extends UpstreamSubsystem<RobotState, IntakeIO, IntakeIOInpu
                         step++;
                         indexCycling();
                     }));
-        else
+        else {
+            isShooting = false;
             shooting();
+        }
     }
 
     @Override
