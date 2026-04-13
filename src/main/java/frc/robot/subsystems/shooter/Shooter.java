@@ -141,6 +141,10 @@ public class Shooter extends UpstreamSubsystem<RobotState, ShooterIO, ShooterIOI
         rollerIO.runVoltage(ShooterConstants.Roller.kFeedVolts);
     }
 
+    public boolean isFlywheelInTolerance() {
+        return Math.abs(inputs.currentRPM - inputs.targetRPM) < ShooterConstants.Flywheel.kRpmErrorTolerance;
+    }
+
     @Override
     protected ShooterIO getIO() {
         switch (Constants.currentMode) {

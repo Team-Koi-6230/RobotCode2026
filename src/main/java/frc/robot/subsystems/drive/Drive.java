@@ -164,7 +164,7 @@ public class Drive extends UpstreamDrivebase<RobotState> {
         omega));
   }
 
-  private boolean isInAimTolerance(double currentAngle, double wantedAngle) {
+  public boolean isInAimTolerance(double currentAngle, double wantedAngle) {
     return Math.abs(MathUtil.angleModulus(currentAngle - wantedAngle)) < DriveConstants.kAimingTolerance.getRadians();
   }
 

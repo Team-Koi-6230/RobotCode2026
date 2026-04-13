@@ -27,7 +27,7 @@ public class RobotContainer {
         private Trigger IntakeButton = driverController.leftTrigger();
         private Trigger HomeButton = driverController.a();
         private Trigger PreparingShooterButton = driverController.rightBumper();
-        private Trigger ShootingButton = driverController.rightTrigger();
+        private Trigger ShootingButton = driverController.b();
         private Trigger UnjamButton = driverController.povUp();
 
         private static SwerveInputStream swerveInputStream = new SwerveInputStream(driverController::getSwerveDrive,
@@ -67,11 +67,24 @@ public class RobotContainer {
 
                 ShootingButton
                                 .and(IntakeButton.negate())
+                                .and(this::isReadyToShoot)
                                 .whileTrue(superstate.setWantedSuperstateCommand(RobotState.SHOOTING));
 
                 ShootingButton
+                                .and(IntakeButton.negate())
+                                .and(this::isUnpreparedToShoot)
+                                .whileTrue(superstate.setWantedSuperstateCommand(RobotState.PREPARING_SHOOTER));
+
+                ShootingButton
                                 .and(IntakeButton)
+                                .and(this::isReadyToShoot)
                                 .whileTrue(superstate.setWantedSuperstateCommand(RobotState.SHOOTING_AND_INTAKING));
+
+                ShootingButton
+                                .and(IntakeButton)
+                                .and(this::isUnpreparedToShoot)
+                                .whileTrue(superstate
+                                                .setWantedSuperstateCommand(RobotState.PREPARING_SHOOTER_AND_INTAKING));
 
                 UnjamButton
                                 .whileTrue(superstate.setWantedSuperstateCommand(RobotState.UNJAM));
@@ -103,5 +116,18 @@ public class RobotContainer {
         public static void addVisionMeasurement(Pose2d visionRobotPoseMeters, double timestampSeconds,
                         Matrix<N3, N1> visionMeasurementStdDevs) {
                 drive.addVisionMeasurement(visionRobotPoseMeters, timestampSeconds, visionMeasurementStdDevs);
+        }
+
+        private boolean isReadyToShoot() {
+                return drive.isInAimTolerance(getRobotPose().getRotation().getRadians(),
+                                Robot.ballisticsCalculator.getShootingRobotAngle().getRadians())
+                                && shooter.isFlywheelInTolerance()
+                                && Math.abs(getRobotVelocity().vxMetersPerSecond) < Constants.robotMeaningfulVxyMetersPerSecond
+                                && Math.abs(getRobotVelocity().vyMetersPerSecond) < Constants.robotMeaningfulVxyMetersPerSecond
+                                && Math.abs(getRobotVelocity().omegaRadiansPerSecond) < Constants.robotMeaningfulOmegaRadiansPerSecond;
+        }
+
+        private boolean isUnpreparedToShoot() {
+                return !isReadyToShoot();
         }
 }
