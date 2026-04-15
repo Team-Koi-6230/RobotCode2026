@@ -53,15 +53,6 @@ public class IntakeIORev implements IntakeIO {
                                 .forwardSoftLimit(IntakeConstants.kForwardSoftLimit)
                                 .reverseSoftLimit(IntakeConstants.kReverseSoftLimit);
 
-                pivotConfig.signals
-                                .primaryEncoderPositionAlwaysOn(true)
-                                .primaryEncoderPositionPeriodMs(20)
-                                .primaryEncoderVelocityAlwaysOn(true)
-                                .primaryEncoderVelocityPeriodMs(20)
-                                .appliedOutputPeriodMs(20)
-                                .busVoltagePeriodMs(20)
-                                .outputCurrentPeriodMs(20);
-
                 pivotConfig.closedLoop
                                 .pid(IntakeConstants.kP, IntakeConstants.kI, IntakeConstants.kD).feedForward
                                 .kS(IntakeConstants.kS)
@@ -77,7 +68,6 @@ public class IntakeIORev implements IntakeIO {
                                 .positionMode(MAXMotionPositionMode.kMAXMotionTrapezoidal);
 
                 pivotConfig.encoder
-                                .inverted(IntakeConstants.kEncoderInverted)
                                 .positionConversionFactor(360.0 / IntakeConstants.kPivotMotorToPivotGearRatio)
                                 .velocityConversionFactor((360.0 / IntakeConstants.kPivotMotorToPivotGearRatio) / 60.0);
 

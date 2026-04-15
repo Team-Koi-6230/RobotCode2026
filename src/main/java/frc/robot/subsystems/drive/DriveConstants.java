@@ -46,13 +46,13 @@ public class DriveConstants {
 
         public static final SwerveModuleConfig[] moduleConfigs = new SwerveModuleConfig[] {
                         // Front Left (Index 0)
-                        new SwerveModuleConfig(1, 2, 9, Rotation2d.fromDegrees(250.66404), false, false, false),
+                        new SwerveModuleConfig(2, 4, 3, Rotation2d.fromDegrees(250.66404), false, false, false),
                         // Front Right (Index 1)
-                        new SwerveModuleConfig(5, 6, 11, Rotation2d.fromDegrees(292.76352), false, false, false),
+                        new SwerveModuleConfig(5, 7, 6, Rotation2d.fromDegrees(292.76352), false, false, false),
                         // Back Left (Index 2)
-                        new SwerveModuleConfig(3, 4, 10, Rotation2d.fromDegrees(162.15804), false, false, false),
+                        new SwerveModuleConfig(11, 13, 12, Rotation2d.fromDegrees(162.15804), false, false, false),
                         // Back Right (Index 3)
-                        new SwerveModuleConfig(7, 8, 12, Rotation2d.fromDegrees(176.22072), false, false, false)
+                        new SwerveModuleConfig(8, 10, 9, Rotation2d.fromDegrees(176.22072), false, false, false)
         };
 
         public static SwerveModuleConfig getModuleConfig(int index) {
