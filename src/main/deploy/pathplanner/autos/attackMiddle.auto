@@ -19,13 +19,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "attack middle"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "Shoot"
+            "pathName": "second swipe"
           }
         }
       ]

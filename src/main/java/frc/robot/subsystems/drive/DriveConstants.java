@@ -11,9 +11,9 @@ import edu.wpi.first.math.util.Units;
 public class DriveConstants {
         public static final double maxSpeedMetersPerSec = 4.8;
         public static final double odometryFrequency = 100.0;
-        public static final double trackWidth = Units.inchesToMeters(26.5);
-        public static final double wheelBase = Units.inchesToMeters(26.5);
-        public static final double driveBaseRadius = Math.hypot(trackWidth / 2.0, wheelBase / 2.0);
+        public static final double driveBaseRadius = Units.inchesToMeters(10.3);
+        public static final double trackWidth = Units.inchesToMeters(14.566);
+        public static final double wheelBase = Units.inchesToMeters(14.566);
 
         public static final Translation2d[] moduleTranslations = new Translation2d[] {
                         new Translation2d(trackWidth / 2.0, wheelBase / 2.0),
@@ -46,13 +46,13 @@ public class DriveConstants {
 
         public static final SwerveModuleConfig[] moduleConfigs = new SwerveModuleConfig[] {
                         // Front Left (Index 0)
-                        new SwerveModuleConfig(2, 4, 3, Rotation2d.fromDegrees(250.66404), false, false, false),
+                        new SwerveModuleConfig(2, 4, 3, Rotation2d.fromDegrees(250.66404), true, false, false),
                         // Front Right (Index 1)
-                        new SwerveModuleConfig(5, 7, 6, Rotation2d.fromDegrees(292.76352), false, false, false),
+                        new SwerveModuleConfig(5, 7, 6, Rotation2d.fromDegrees(292.76352), true, false, false),
                         // Back Left (Index 2)
-                        new SwerveModuleConfig(11, 13, 12, Rotation2d.fromDegrees(162.15804), false, false, false),
+                        new SwerveModuleConfig(11, 13, 12, Rotation2d.fromDegrees(162.15804), true, false, false),
                         // Back Right (Index 3)
-                        new SwerveModuleConfig(8, 10, 9, Rotation2d.fromDegrees(176.22072), false, false, false)
+                        new SwerveModuleConfig(8, 10, 9, Rotation2d.fromDegrees(176.22072), true, false, false)
         };
 
         public static SwerveModuleConfig getModuleConfig(int index) {
@@ -101,7 +101,7 @@ public class DriveConstants {
         public static final int kFalloffExponent = 10;
 
         public static final double robotMassKg = 45;
-        public static final double robotMOI = 6.883;
+        public static final double robotMOI = 3.888;
         public static final double wheelCOF = 1.2;
         public static final RobotConfig ppConfig = new RobotConfig(
                         robotMassKg,
