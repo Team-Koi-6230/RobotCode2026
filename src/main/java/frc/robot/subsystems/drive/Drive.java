@@ -50,6 +50,7 @@ import frc.robot.RobotState;
 import frc.robot.util.LocalADStarAK;
 import frc.robot.util.MathHelper;
 import team6230.koiupstream.subsystems.UpstreamDrivebase;
+import team6230.koiupstream.superstates.Superstate;
 import team6230.koiupstream.utils.SwerveInputStream;
 
 public class Drive extends UpstreamDrivebase<RobotState> {
@@ -122,6 +123,7 @@ public class Drive extends UpstreamDrivebase<RobotState> {
     registerDefaultDrive(this::defaultDrive);
     registerDriveMode(RobotState.PREPARING_SHOOTER, this::shootingDrive);
     registerDriveMode(RobotState.SHOOTING, this::shootingDrive);
+    registerDriveMode(RobotState.SHOOTING_RECOVERY, this::shootingDrive);
   }
 
   private ChassisSpeeds defaultDrive(DoubleSupplier xSupplier, DoubleSupplier ySupplier, DoubleSupplier omegaSupplier) {
@@ -164,7 +166,7 @@ public class Drive extends UpstreamDrivebase<RobotState> {
         omega));
   }
 
-  private boolean isInAimTolerance(double currentAngle, double wantedAngle) {
+  public boolean isInAimTolerance(double currentAngle, double wantedAngle) {
     return Math.abs(MathUtil.angleModulus(currentAngle - wantedAngle)) < DriveConstants.kAimingTolerance.getRadians();
   }
 
@@ -241,6 +243,16 @@ public class Drive extends UpstreamDrivebase<RobotState> {
   }
 
   public void runVelocity(ChassisSpeeds speeds) {
+    if (Superstate.getInstance().isCurrentWanted(RobotState.PREPARING_SHOOTER) ||
+        Superstate.getInstance().isCurrentWanted(RobotState.PREPARING_SHOOTER_AND_INTAKING) ||
+        Superstate.getInstance().isCurrentWanted(RobotState.SHOOTING) ||
+        Superstate.getInstance().isCurrentWanted(RobotState.SHOOTING_AND_INTAKING)) {
+      Rotation2d aimingAngle = Robot.ballisticsCalculator.getShootingRobotAngle();
+
+      double omega = _aimingPID.calculate(getRotation().getRadians(), aimingAngle.getRadians());
+      speeds.omegaRadiansPerSecond = omega;
+    }
+    
     ChassisSpeeds discreteSpeeds = ChassisSpeeds.discretize(speeds, 0.02);
     SwerveModuleState[] setpointStates = kinematics.toSwerveModuleStates(discreteSpeeds);
     SwerveDriveKinematics.desaturateWheelSpeeds(setpointStates, maxSpeedMetersPerSec);

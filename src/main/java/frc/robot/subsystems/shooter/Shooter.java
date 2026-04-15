@@ -80,6 +80,7 @@ public class Shooter extends UpstreamSubsystem<RobotState, ShooterIO, ShooterIOI
         addSuperstateBehaviour(RobotState.UNJAM, this::unjam);
         addSuperstateBehaviour(RobotState.PREPARING_SHOOTER, this::prepareShooter);
         addSuperstateBehaviour(RobotState.PREPARING_SHOOTER_AND_INTAKING, this::prepareShooter);
+        addSuperstateBehaviour(RobotState.SHOOTING_RECOVERY, this::prepareShooter);
         addSuperstateBehaviour(RobotState.SHOOTING, this::shooting);
         addSuperstateBehaviour(RobotState.SHOOTING_AND_INTAKING, this::shooting);
     }
@@ -139,6 +140,10 @@ public class Shooter extends UpstreamSubsystem<RobotState, ShooterIO, ShooterIOI
     private void shooting() {
         isShooting = true;
         rollerIO.runVoltage(ShooterConstants.Roller.kFeedVolts);
+    }
+
+    public boolean isFlywheelInTolerance() {
+        return Math.abs(inputs.currentRPM - inputs.targetRPM) < ShooterConstants.Flywheel.kRpmErrorTolerance;
     }
 
     @Override

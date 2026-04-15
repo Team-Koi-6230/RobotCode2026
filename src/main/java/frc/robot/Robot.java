@@ -66,6 +66,7 @@ public class Robot extends LoggedRobot {
     if (m_autonomousCommand != null) {
       m_autonomousCommand.cancel();
     }
+    Superstate.getInstance().setDefaultWantedState(RobotState.IDLE);
   }
 
   public static boolean isInAllianceZone() {

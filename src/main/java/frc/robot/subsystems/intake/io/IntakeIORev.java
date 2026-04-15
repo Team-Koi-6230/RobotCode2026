@@ -142,7 +142,9 @@ public class IntakeIORev implements IntakeIO {
                                 .withA(kA)
                                 .withMAXMotion(kMaxVelocityRadPerSec, kMaxAccelRadPerSecSquared,
                                                 IntakeConstants.kTolerance);
+
                 tryToSetPidfUntillOkTune(m_pivot, 5, pidf);
+
         }
 
         private Rotation2d getAbsoluteEncoder() {

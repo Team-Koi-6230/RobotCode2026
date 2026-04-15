@@ -25,7 +25,8 @@ public class Intake extends UpstreamSubsystem<RobotState, IntakeIO, IntakeIOInpu
     private final RollerIO roller;
     private final RollerIOInputsAutoLogged rollerInputs;
 
-    public int step = 1;
+    private int step = 1;
+    private boolean isShooting = false;
 
     @Tunable
     private double tunablePivotSetpoint = IntakeConstants.kMinAngle.getDegrees();
@@ -87,12 +88,15 @@ public class Intake extends UpstreamSubsystem<RobotState, IntakeIO, IntakeIOInpu
         addSuperstateBehaviour(RobotState.IDLE, () -> {
             clearConditionalActions();
             roller.runVoltage(0);
+            isShooting = false;
         });
         addSuperstateBehaviour(RobotState.PREPARING_SHOOTER, () -> {
             clearConditionalActions();
             roller.runVoltage(0);
+            isShooting = false;
         });
         addSuperstateBehaviour(RobotState.SHOOTING, () -> shooting());
+        addSuperstateBehaviour(RobotState.SHOOTING_RECOVERY, () -> shooting());
         addSuperstateBehaviour(RobotState.HOME, () -> home());
     }
 
@@ -100,6 +104,7 @@ public class Intake extends UpstreamSubsystem<RobotState, IntakeIO, IntakeIOInpu
         clearConditionalActions();
         io.setTargetAngle(IntakeConstants.kClosedAngle);
         roller.runVoltage(0);
+        isShooting = false;
     }
 
     private void intaking() {
@@ -108,11 +113,15 @@ public class Intake extends UpstreamSubsystem<RobotState, IntakeIO, IntakeIOInpu
         registerConditionalAction(new ConditionalAction(
                 () -> inputs.relativePivotAngleDeg < IntakeConstants.kMinOpenAngle.getDegrees(),
                 () -> roller.runVoltage(IntakeConstants.kIntakingVolts)));
+        isShooting = false;
     }
 
     private void shooting() {
+        if (isShooting)
+            return;
         clearConditionalActions();
         io.setTargetAngle(IntakeConstants.kOpenAngle);
+        isShooting = true;
         // when the arm is close enough to open we will close it a bit
         registerConditionalAction(new ConditionalAction(
                 () -> inputs.relativePivotAngleDeg < IntakeConstants.kMinOpenAngle.getDegrees(), () -> {
@@ -136,8 +145,10 @@ public class Intake extends UpstreamSubsystem<RobotState, IntakeIO, IntakeIOInpu
                         step++;
                         indexCycling();
                     }));
-        else
+        else {
+            isShooting = false;
             shooting();
+        }
     }
 
     @Override
