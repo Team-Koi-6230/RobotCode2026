@@ -33,6 +33,9 @@ public class IntakeIORev implements IntakeIO {
 
         private boolean _closedLoopPivot = false;
 
+        private boolean _hasSeeded = false;
+        private int _seedAttempts = 0;
+
         public IntakeIORev() {
                 m_pivot = new SparkMax(RobotMap.CanBus.kIntakePivotID, MotorType.kBrushless);
 
@@ -78,14 +81,23 @@ public class IntakeIORev implements IntakeIO {
                                                 PersistMode.kPersistParameters));
 
                 m_pivotController = m_pivot.getClosedLoopController();
-
-                tryUntilOk(m_pivot, 5, () -> m_relativeEncoder.setPosition(getAbsoluteEncoder().getDegrees()));
         }
 
         @Override
         public void updateInputs(IntakeIOInputsAutoLogged inputs) {
-                inputs.absolutePivotAngleDeg = getAbsoluteEncoder().getDegrees();
-                inputs.absolutePivotAngleRad = getAbsoluteEncoder().getRadians();
+                double currentAbsAngleDeg = getAbsoluteEncoder().getDegrees();
+
+                if (!_hasSeeded && _seedAttempts > 10) {
+                        double absAngle = getAbsoluteEncoder().getDegrees();
+                        tryUntilOk(m_pivot, 5, () -> m_relativeEncoder.setPosition(absAngle));
+                        _hasSeeded = true;
+                } else if (!_hasSeeded) {
+                        _seedAttempts++;
+                }
+
+                inputs.absolutePivotAngleDeg = currentAbsAngleDeg;
+                inputs.absolutePivotAngleRad = Math.toRadians(currentAbsAngleDeg);
+
                 ifOk(m_pivot, m_relativeEncoder::getPosition, (value) -> Math.abs(_targetAngle.getDegrees() - value));
                 ifOk(
                                 m_pivot,
@@ -138,7 +150,8 @@ public class IntakeIORev implements IntakeIO {
         }
 
         private Rotation2d getAbsoluteEncoder() {
-                return m_absoluteEncoder.getPosition();
+                return Rotation2d.fromRotations(m_absoluteEncoder.getPosition().getRotations()
+                                / IntakeConstants.kPivotShaftToPivotGearRatio);
         }
 
 }

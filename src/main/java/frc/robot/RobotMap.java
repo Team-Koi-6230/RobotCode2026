@@ -6,7 +6,7 @@ public class RobotMap {
         public static final int kIntakeRollerID = 18;
         public static final int kMainShooterID = 21;
         public static final int kSecondaryShooterID = 20;
-        public static final int kFeederRollerID = 18;
+        public static final int kFeederRollerID = 16;
     }
 
     public class DIO {
