@@ -34,6 +34,7 @@ public class ShooterIORev implements ShooterIO {
 
                 SparkFlexConfig m_config = new SparkFlexConfig();
                 m_config
+                                .inverted(true)
                                 .smartCurrentLimit(ShooterConstants.Flywheel.kShooterSmartCurrentLimit)
                                 .idleMode(IdleMode.kCoast)
                                 .voltageCompensation(12);
@@ -106,6 +107,7 @@ public class ShooterIORev implements ShooterIO {
         @Override
         public void setPIDF(double kP, double kI, double kD, double kS, double kV, double kA) {
                 SparkPIDF pidf = new SparkPIDF()
+                                .withInverted(true)
                                 .withP(kP)
                                 .withI(kI)
                                 .withD(kD)

@@ -46,13 +46,13 @@ public class DriveConstants {
 
         public static final SwerveModuleConfig[] moduleConfigs = new SwerveModuleConfig[] {
                         // Front Left (Index 0)
-                        new SwerveModuleConfig(2, 4, 3, Rotation2d.fromDegrees(250.66404), true, false, false),
+                        new SwerveModuleConfig(2, 4, 3, Rotation2d.fromRotations(-0.301270), true, false, true),
                         // Front Right (Index 1)
-                        new SwerveModuleConfig(5, 7, 6, Rotation2d.fromDegrees(292.76352), true, false, false),
+                        new SwerveModuleConfig(5, 7, 6, Rotation2d.fromRotations(-0.196777), true, false, true),
                         // Back Left (Index 2)
-                        new SwerveModuleConfig(11, 13, 12, Rotation2d.fromDegrees(162.15804), true, false, false),
+                        new SwerveModuleConfig(11, 13, 12, Rotation2d.fromRotations(0.458008), true, false, true),
                         // Back Right (Index 3)
-                        new SwerveModuleConfig(8, 10, 9, Rotation2d.fromDegrees(176.22072), true, false, false)
+                        new SwerveModuleConfig(8, 10, 9, Rotation2d.fromRotations(0.495605), true, false, true)
         };
 
         public static SwerveModuleConfig getModuleConfig(int index) {
@@ -67,9 +67,9 @@ public class DriveConstants {
         public static final double driveEncoderPositionFactor = 2 * Math.PI / driveMotorReduction;
         public static final double driveEncoderVelocityFactor = (2 * Math.PI) / 60.0 / driveMotorReduction;
 
-        public static final double driveKp = 0.0020645;
+        public static final double driveKp = 0.02;
         public static final double driveKd = 0.0;
-        public static final double driveKs = 0.27;
+        public static final double driveKs = 0.3;
         public static final double driveKv = 0;
         public static final double driveSimP = 0.05;
         public static final double driveSimD = 0.0;
@@ -80,12 +80,13 @@ public class DriveConstants {
         public static final double turnMotorReduction = 12.8;
         public static final DCMotor turnGearbox = DCMotor.getNeoVortex(1);
 
-        public static final double turnEncoderPositionFactor = 2 * Math.PI; // Rotations -> Radians
-        public static final double turnEncoderVelocityFactor = (2 * Math.PI) / 60.0; // RPM -> Rad/Sec
-        public static final double kCANcoderFactor = turnEncoderPositionFactor;
+        public static final double turnEncoderPositionFactor = (2 * Math.PI) / turnMotorReduction;
+        public static final double turnEncoderVelocityFactor = (2 * Math.PI) / 60.0 / turnMotorReduction;
 
-        public static final double turnKp = 0.02;
-        public static final double turnKd = 0.0;
+        public static final double kCANcoderFactor = 2 * Math.PI;
+
+        public static final double turnKp = 0.05;
+        public static final double turnKd = 0;
         public static final double turnSimP = 8.0;
         public static final double turnSimD = 0.0;
         public static final double turnPIDMinInput = 0;

@@ -15,16 +15,15 @@ public class IntakeConstants {
     public static final int kShootingVolts = 6;
     public static final boolean kMotorInverted = true;
 
-    public static final Rotation2d kThroughBoreMin = Rotation2d.fromDegrees(0);
-    public static final Rotation2d kThroughBoreOffset = Rotation2d.fromDegrees(239);
-    public static final boolean kEncoderInverted = true;
+    public static final Rotation2d kThroughBoreOffset = Rotation2d.fromDegrees(-219);
+    public static final boolean kEncoderInverted = kMotorInverted;
 
-    public static final double kForwardSoftLimit = 106;
+    public static final double kForwardSoftLimit = 101;
     public static final double kReverseSoftLimit = 2;
 
     public static final Rotation2d kMinAngle = Rotation2d.fromDegrees(2);
-    public static final Rotation2d kMaxAngle = Rotation2d.fromDegrees(105);
-    public static final Rotation2d kClosedAngle = Rotation2d.fromDegrees(103);
+    public static final Rotation2d kMaxAngle = Rotation2d.fromDegrees(100);
+    public static final Rotation2d kClosedAngle = Rotation2d.fromDegrees(98);
     public static final Rotation2d kOpenAngle = Rotation2d.fromDegrees(4);
     public static final Rotation2d kMinOpenAngle = Rotation2d.fromDegrees(7);
     public static final double kErrorToleranceDeg = 2;
@@ -35,17 +34,17 @@ public class IntakeConstants {
     public static final double kMOIpivot = 0.1;
     public static final double kLengthPivot = 0.3;
 
-    public static final double kP = 0;
+    public static final double kP = 0.3;
     public static final double kI = 0;
-    public static final double kD = 0;
-    public static final double kS = 0.144;
-    public static final double kV = 0.0025;
+    public static final double kD = 0.001;
+    public static final double kS = 0.14;
+    public static final double kV = 0.0001;
     public static final double kA = 0;
-    public static final double kG = 0.185;
+    public static final double kG = 0.2;
     public static final double kCosRatio = 1;
-    public static final double kMaxAcceleration = 46000;
+    public static final double kMaxAcceleration = 36000;
     public static final double kCruiseVelocity = 400000;
-    public static final double kTolerance = 0.5;
+    public static final double kTolerance = 2;
 
     public static final double kPsim = 6;
     public static final double kIsim = 0;

@@ -126,4 +126,8 @@ public class Module {
   public double getFFCharacterizationVelocity() {
     return inputs.driveVelocityRadPerSec;
   }
+
+  public void seedTurnEncoder() {
+    io.seedTurnEncoder();
+  }
 }

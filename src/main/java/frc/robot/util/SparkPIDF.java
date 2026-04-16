@@ -11,6 +11,8 @@ import com.revrobotics.spark.config.SparkBaseConfig;
  * and the new MAXMotion parameters introduced in the REVLib 2025/2026 API.
  */
 public class SparkPIDF {
+    public boolean kInverted = false;
+
     public double kP = 0.0;
     public double kI = 0.0;
     public double kD = 0.0;
@@ -45,6 +47,11 @@ public class SparkPIDF {
     }
 
     // --- Basic Gain Builder Methods ---
+
+    public SparkPIDF withInverted(boolean kInverted) {
+        this. kInverted = kInverted;
+        return this;
+    }
 
     public SparkPIDF withP(double kP) {
         this.kP = kP;
@@ -143,6 +150,8 @@ public class SparkPIDF {
      * @return The updated SparkBaseConfig for method chaining.
      */
     public SparkBaseConfig applyTo(SparkBaseConfig config, ClosedLoopSlot slot) {
+        config.inverted(kInverted);
+
         config.closedLoop
                 .p(kP, slot)
                 .i(kI, slot)

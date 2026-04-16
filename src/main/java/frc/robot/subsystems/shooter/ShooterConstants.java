@@ -16,7 +16,7 @@ public class ShooterConstants {
         public static final double kISim = 0;
         public static final double kDSim = 0;
         public static final double kSSim = 0.01;
-        public static final double kVSim = 0.01651; 
+        public static final double kVSim = 0.01651;
         public static final double kASim = 0;
 
         public static final double kP = 0.00008;
@@ -35,7 +35,7 @@ public class ShooterConstants {
 
     public static class Roller {
         public static final double kRollerGearRatio = 4;
-        public static final int kRollerSmartCurrentLimit = 60;
+        public static final int kRollerSmartCurrentLimit = 80;
         public static final RollerConfig.RollerMotor kRollerMotor = RollerConfig.RollerMotor.NEO;
 
         public static final double kFeedVolts = 12;

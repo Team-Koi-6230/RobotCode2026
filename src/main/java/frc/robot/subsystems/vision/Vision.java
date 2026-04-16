@@ -33,6 +33,7 @@ public class Vision extends SubsystemBase {
         // Automatically syncs the hardware data to the inputs object and logs it
         io.updateInputs(inputs);
         Logger.processInputs("Vision", inputs);
+        updatePoseEstimation();
     }
 
     /**

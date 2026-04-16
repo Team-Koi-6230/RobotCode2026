@@ -207,6 +207,7 @@ public class Drive extends UpstreamDrivebase<RobotState> {
     if (DriverStation.isDisabled()) {
       for (var module : modules) {
         module.stop();
+        seedTurnEncoder();
       }
     }
 
@@ -252,7 +253,7 @@ public class Drive extends UpstreamDrivebase<RobotState> {
       double omega = _aimingPID.calculate(getRotation().getRadians(), aimingAngle.getRadians());
       speeds.omegaRadiansPerSecond = omega;
     }
-    
+
     ChassisSpeeds discreteSpeeds = ChassisSpeeds.discretize(speeds, 0.02);
     SwerveModuleState[] setpointStates = kinematics.toSwerveModuleStates(discreteSpeeds);
     SwerveDriveKinematics.desaturateWheelSpeeds(setpointStates, maxSpeedMetersPerSec);
@@ -353,6 +354,7 @@ public class Drive extends UpstreamDrivebase<RobotState> {
       Matrix<N3, N1> visionMeasurementStdDevs) {
     poseEstimator.addVisionMeasurement(
         visionRobotPoseMeters, timestampSeconds, visionMeasurementStdDevs);
+    Logger.recordOutput("jorking", DriverStation.getMatchTime());
   }
 
   public double getMaxLinearSpeedMetersPerSec() {
@@ -386,6 +388,12 @@ public class Drive extends UpstreamDrivebase<RobotState> {
 
   public void toggleShouldRoundOrientation() {
     _shouldRoundOrientation = !_shouldRoundOrientation;
+  }
+
+  public void seedTurnEncoder() {
+    for (int i = 0; i < modules.length; ++i) {
+      modules[i].seedTurnEncoder();
+    }
   }
 
   private void getIO() {

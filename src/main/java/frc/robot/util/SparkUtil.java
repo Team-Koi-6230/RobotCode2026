@@ -71,7 +71,7 @@ public class SparkUtil {
 
     tryUntilOk(spark, maxAttempts, () -> spark.configure(
         config,
-        ResetMode.kResetSafeParameters,
+        ResetMode.kNoResetSafeParameters,
         PersistMode.kNoPersistParameters));
   }
 

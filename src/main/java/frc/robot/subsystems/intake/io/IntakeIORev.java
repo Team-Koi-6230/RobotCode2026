@@ -18,15 +18,15 @@ import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import frc.robot.RobotMap;
 import frc.robot.subsystems.intake.IntakeConstants;
 import frc.robot.util.SparkPIDF;
-import team6230.koiupstream.utils.AbsoluteEncoderDIO;
 
 public class IntakeIORev implements IntakeIO {
         private final SparkMax m_pivot;
         private final RelativeEncoder m_relativeEncoder;
-        private final AbsoluteEncoderDIO m_absoluteEncoder;
+        private final DutyCycleEncoder m_absoluteEncoder;
         private final SparkClosedLoopController m_pivotController;
 
         private Rotation2d _targetAngle = IntakeConstants.kMaxAngle;
@@ -41,10 +41,10 @@ public class IntakeIORev implements IntakeIO {
 
                 m_relativeEncoder = m_pivot.getEncoder();
 
-                m_absoluteEncoder = new AbsoluteEncoderDIO(RobotMap.DIO.kIntakePivotThroughBoreID)
-                                .setEncoderOffset(IntakeConstants.kThroughBoreOffset)
-                                .setMinimumValue(IntakeConstants.kThroughBoreMin)
-                                .setInverted(IntakeConstants.kEncoderInverted);
+                m_absoluteEncoder = new DutyCycleEncoder(RobotMap.DIO.kIntakePivotThroughBoreID, 360,
+                                IntakeConstants.kThroughBoreOffset.getDegrees());
+
+                m_absoluteEncoder.setInverted(IntakeConstants.kEncoderInverted);
 
                 var pivotConfig = new SparkMaxConfig();
                 pivotConfig
@@ -77,7 +77,7 @@ public class IntakeIORev implements IntakeIO {
                 tryUntilOk(
                                 m_pivot,
                                 5,
-                                () -> m_pivot.configure(pivotConfig, ResetMode.kNoResetSafeParameters,
+                                () -> m_pivot.configure(pivotConfig, ResetMode.kResetSafeParameters,
                                                 PersistMode.kPersistParameters));
 
                 m_pivotController = m_pivot.getClosedLoopController();
@@ -135,6 +135,7 @@ public class IntakeIORev implements IntakeIO {
         public void setPIDF(double kP, double kI, double kD, double kS, double kG, double kV, double kA,
                         double kMaxVelocityRadPerSec, double kMaxAccelRadPerSecSquared) {
                 SparkPIDF pidf = new SparkPIDF()
+                                .withInverted(IntakeConstants.kEncoderInverted)
                                 .withP(kP)
                                 .withI(kI)
                                 .withD(kD)
@@ -150,8 +151,7 @@ public class IntakeIORev implements IntakeIO {
         }
 
         private Rotation2d getAbsoluteEncoder() {
-                return Rotation2d.fromRotations(m_absoluteEncoder.getPosition().getRotations()
-                                / IntakeConstants.kPivotShaftToPivotGearRatio);
+                return Rotation2d.fromDegrees(m_absoluteEncoder.get() / IntakeConstants.kPivotShaftToPivotGearRatio);
         }
 
 }
