@@ -354,7 +354,6 @@ public class Drive extends UpstreamDrivebase<RobotState> {
       Matrix<N3, N1> visionMeasurementStdDevs) {
     poseEstimator.addVisionMeasurement(
         visionRobotPoseMeters, timestampSeconds, visionMeasurementStdDevs);
-    Logger.recordOutput("jorking", DriverStation.getMatchTime());
   }
 
   public double getMaxLinearSpeedMetersPerSec() {

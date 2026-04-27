@@ -13,6 +13,7 @@ import frc.robot.FieldConstants.LinesVertical;
 import frc.robot.subsystems.shooter.ballistics.BallisticsCalculator;
 import frc.robot.util.AllianceFlipUtil;
 import team6230.koiupstream.superstates.Superstate;
+import team6230.koiupstream.tunable.Tunable;
 import team6230.koiupstream.tunable.TunableManager;
 
 public class Robot extends LoggedRobot {
@@ -21,6 +22,9 @@ public class Robot extends LoggedRobot {
   private final RobotContainer m_robotContainer;
 
   public static BallisticsCalculator ballisticsCalculator;
+
+  @Tunable
+  public static boolean isShowcaseMode = false;
 
   public Robot() {
     Logger.recordMetadata("ProjectName", "Team Koi Robot code");

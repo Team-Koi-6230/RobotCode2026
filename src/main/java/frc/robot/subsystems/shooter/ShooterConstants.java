@@ -10,7 +10,7 @@ public class ShooterConstants {
 
         public static final double kUnjamVolts = -4;
 
-        public static final double kRpmErrorTolerance = 50;
+        public static final double kRpmErrorTolerance = 100;
 
         public static final double kPSim = 0.2;
         public static final double kISim = 0;
@@ -23,7 +23,7 @@ public class ShooterConstants {
         public static final double kI = 0;
         public static final double kD = 0;
         public static final double kS = 0.01;
-        public static final double kV = 0.0018;
+        public static final double kV = 0.00182;
         public static final double kA = 0;
     }
 

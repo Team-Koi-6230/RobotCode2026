@@ -46,13 +46,13 @@ public class DriveConstants {
 
         public static final SwerveModuleConfig[] moduleConfigs = new SwerveModuleConfig[] {
                         // Front Left (Index 0)
-                        new SwerveModuleConfig(2, 4, 3, Rotation2d.fromRotations(-0.301270), true, false, true),
+                        new SwerveModuleConfig(2, 4, 3, Rotation2d.fromRotations(-0.306641), true, false, true),
                         // Front Right (Index 1)
-                        new SwerveModuleConfig(5, 7, 6, Rotation2d.fromRotations(-0.196777), true, false, true),
+                        new SwerveModuleConfig(5, 7, 6, Rotation2d.fromRotations(-0.199219), true, false, true),
                         // Back Left (Index 2)
-                        new SwerveModuleConfig(11, 13, 12, Rotation2d.fromRotations(0.458008), true, false, true),
+                        new SwerveModuleConfig(11, 13, 12, Rotation2d.fromRotations(0.462158), true, false, true),
                         // Back Right (Index 3)
-                        new SwerveModuleConfig(8, 10, 9, Rotation2d.fromRotations(0.495605), true, false, true)
+                        new SwerveModuleConfig(8, 10, 9, Rotation2d.fromRotations(0.486328), true, false, true)
         };
 
         public static SwerveModuleConfig getModuleConfig(int index) {
@@ -67,7 +67,7 @@ public class DriveConstants {
         public static final double driveEncoderPositionFactor = 2 * Math.PI / driveMotorReduction;
         public static final double driveEncoderVelocityFactor = (2 * Math.PI) / 60.0 / driveMotorReduction;
 
-        public static final double driveKp = 0.02;
+        public static final double driveKp = 0.01;
         public static final double driveKd = 0.0;
         public static final double driveKs = 0.3;
         public static final double driveKv = 0;
@@ -85,7 +85,7 @@ public class DriveConstants {
 
         public static final double kCANcoderFactor = 2 * Math.PI;
 
-        public static final double turnKp = 0.05;
+        public static final double turnKp = 0.1;
         public static final double turnKd = 0;
         public static final double turnSimP = 8.0;
         public static final double turnSimD = 0.0;

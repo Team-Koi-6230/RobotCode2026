@@ -15,6 +15,8 @@ import frc.robot.util.AllianceFlipUtil;
 
 public class BallisticsCalculator {
     public double getFlywheelSetpoint() {
+        if (Robot.isShowcaseMode)
+            return BallisticsParameters.kShowcaseSpeed;
         if (Robot.isInAllianceZone())
             return convertSurfaceVelocityToRotationPerMinute(
                     BallisticsParameters.kShotFlywheelSpeedMap.get(getShooterDistanceToHub()));
@@ -22,6 +24,8 @@ public class BallisticsCalculator {
     }
 
     public double getHoodSetpoint() {
+        if (Robot.isShowcaseMode)
+            return BallisticsParameters.kShowcaseAngle;
         if (Robot.isInAllianceZone())
             return BallisticsParameters.kShotHoodAngleMap.get(getShooterDistanceToHub());
         return BallisticsParameters.kPassingAngle;

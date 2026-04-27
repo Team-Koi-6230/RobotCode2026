@@ -6,6 +6,7 @@ import frc.robot.Robot;
 import frc.robot.RobotMap;
 import frc.robot.RobotState;
 import frc.robot.subsystems.shooter.ballistics.BallisticsCalculator;
+import frc.robot.subsystems.shooter.ballistics.BallisticsParameters;
 import frc.robot.subsystems.shooter.flywheelIO.ShooterIO;
 import frc.robot.subsystems.shooter.flywheelIO.ShooterIOInputsAutoLogged;
 import frc.robot.subsystems.shooter.flywheelIO.ShooterIORev;
@@ -35,6 +36,9 @@ public class Shooter extends UpstreamSubsystem<RobotState, ShooterIO, ShooterIOI
     private boolean isShooting = false;
 
     private BallisticsCalculator ballisticsCalculator = Robot.ballisticsCalculator;
+
+    @Tunable
+    private boolean _ShowcaseShooter = true;
 
     @Tunable
     private double _tunedSurfaceSpeed = 0;
@@ -85,6 +89,7 @@ public class Shooter extends UpstreamSubsystem<RobotState, ShooterIO, ShooterIOI
         addSuperstateBehaviour(RobotState.SHOOTING_AND_INTAKING, this::shooting);
     }
 
+    @SuppressWarnings("static-access")
     @Override
     public void update() {
         if (TunableManager.checkChanged(this)) {
@@ -100,6 +105,11 @@ public class Shooter extends UpstreamSubsystem<RobotState, ShooterIO, ShooterIOI
 
         var flywheelSetpoint = ballisticsCalculator.getFlywheelSetpoint();
         var hoodSetpoint = ballisticsCalculator.getHoodSetpoint();
+        if (_ShowcaseShooter) {
+            flywheelSetpoint = ballisticsCalculator
+                    .convertSurfaceVelocityToRotationPerMinute(BallisticsParameters.kShowcaseSpeed);
+            hoodSetpoint = BallisticsParameters.kShowcaseAngle;
+        }
 
         if (inputs.targetRPM != flywheelSetpoint)
             io.runRPM(flywheelSetpoint);

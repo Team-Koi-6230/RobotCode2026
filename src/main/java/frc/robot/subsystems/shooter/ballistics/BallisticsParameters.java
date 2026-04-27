@@ -45,4 +45,7 @@ public class BallisticsParameters {
 
     public static final double kRightLaneMultiplier = 1;
     public static final double kLeftLaneMultiplier = 3;
+
+    public static final double kShowcaseSpeed = 13;
+    public static final double kShowcaseAngle = 100;
 }
