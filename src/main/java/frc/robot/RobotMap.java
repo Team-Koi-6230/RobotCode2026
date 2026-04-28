@@ -2,6 +2,7 @@ package frc.robot;
 
 public class RobotMap {
     public class CanBus {
+        public static final int kPigeonID = 0;
         public static final int kIntakePivotID = 15;
         public static final int kIntakeRollerID = 18;
         public static final int kMainShooterID = 21;
