@@ -15,7 +15,7 @@ public class IntakeConstants {
     public static final int kShootingVolts = 6;
     public static final boolean kMotorInverted = true;
 
-    public static final Rotation2d kThroughBoreOffset = Rotation2d.fromDegrees(-19);
+    public static final Rotation2d kThroughBoreOffset = Rotation2d.fromDegrees(-34);
     public static final boolean kEncoderInverted = kMotorInverted;
 
     public static final double kForwardSoftLimit = 101;

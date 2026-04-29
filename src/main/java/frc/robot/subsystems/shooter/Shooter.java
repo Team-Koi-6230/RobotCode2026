@@ -38,7 +38,7 @@ public class Shooter extends UpstreamSubsystem<RobotState, ShooterIO, ShooterIOI
     private BallisticsCalculator ballisticsCalculator = Robot.ballisticsCalculator;
 
     @Tunable
-    private boolean _ShowcaseShooter = true;
+    private boolean _ShowcaseShooter = false;
 
     @Tunable
     private double _tunedSurfaceSpeed = 0;

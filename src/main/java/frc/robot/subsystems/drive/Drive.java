@@ -398,7 +398,7 @@ public class Drive extends UpstreamDrivebase<RobotState> {
   private void getIO() {
     switch (Constants.currentMode) {
       case REAL:
-        gyroIO = new GyroIOPigeon2() {
+        gyroIO = new GyroIONavX() {
         };
         for (int i = 0; i < modules.length; ++i) {
           modules[i] = new Module(new ModuleIOSpark(i), i);
