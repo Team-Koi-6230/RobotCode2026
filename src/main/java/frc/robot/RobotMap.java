@@ -15,6 +15,7 @@ public class RobotMap {
     }
 
     public class PWM {
+        public static final int kLED = 0;
         public static final int kServo1 = 9;
         public static final int kServo2 = 8;
     }
