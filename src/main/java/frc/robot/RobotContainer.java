@@ -53,15 +53,7 @@ public class RobotContainer {
 
         public RobotContainer() {
                 NamedCommands.registerCommand("Shoot", Commands.run(() -> {
-                        if (isReadyToShoot()) {
-                                superstate.setWantedSuperstate(RobotState.SHOOTING);
-                                return;
-                        }
-                        if (isShooting) {
-                                superstate.setWantedSuperstate(RobotState.SHOOTING_RECOVERY);
-                                return;
-                        }
-                        superstate.setWantedSuperstate(RobotState.PREPARING_SHOOTER);
+
                 }, superstate));
                 NamedCommands.registerCommand("Intake", superstate.setWantedSuperstateCommand(RobotState.INTAKING));
                 NamedCommands.registerCommand("Idle", superstate.setWantedSuperstateCommand(RobotState.IDLE));
@@ -102,30 +94,28 @@ public class RobotContainer {
 
                 ShootingButton
                                 .and(IntakeButton.negate())
-                                .and(this::isReadyToShoot)
+                                .and(() -> !superstate.isCurrent(RobotState.SHOOTING))
+                                .whileTrue(superstate.setWantedSuperstateCommand(RobotState.PRESHOOTING));
+
+                ShootingButton
+                                .and(IntakeButton.negate())
+                                .and(() -> superstate.isCurrent(RobotState.SHOOTING))
                                 .whileTrue(superstate.setWantedSuperstateCommand(RobotState.SHOOTING));
 
-                ShootingButton
-                                .and(IntakeButton.negate())
-                                .and(this::isUnpreparedToShoot)
-                                .and(() -> isShooting)
-                                .whileTrue(superstate.setWantedSuperstateCommand(RobotState.SHOOTING_RECOVERY));
-                ShootingButton
-                                .and(IntakeButton.negate())
-                                .and(this::isUnpreparedToShoot)
-                                .and(() -> !isShooting)
-                                .whileTrue(superstate.setWantedSuperstateCommand(RobotState.PREPARING_SHOOTER));
-
-                ShootingButton
-                                .and(IntakeButton)
-                                .and(this::isReadyToShoot)
-                                .whileTrue(superstate.setWantedSuperstateCommand(RobotState.SHOOTING_AND_INTAKING));
-
-                ShootingButton
-                                .and(IntakeButton)
-                                .and(this::isUnpreparedToShoot)
-                                .whileTrue(superstate
-                                                .setWantedSuperstateCommand(RobotState.PREPARING_SHOOTER_AND_INTAKING));
+                /*
+                 * ShootingButton
+                 * .and(IntakeButton.negate())
+                 * .and(this::isUnpreparedToShoot)
+                 * .and(() -> !isShooting)
+                 * .whileTrue(superstate.setWantedSuperstateCommand(RobotState.PREPARING_SHOOTER
+                 * ));
+                 * 
+                 * ShootingButton
+                 * .and(IntakeButton)
+                 * .and(this::isUnpreparedToShoot)
+                 * .whileTrue(superstate
+                 * .setWantedSuperstateCommand(RobotState.PREPARING_SHOOTER_AND_INTAKING));
+                 */
 
                 UnjamButton
                                 .whileTrue(superstate.setWantedSuperstateCommand(RobotState.UNJAM));
@@ -138,15 +128,6 @@ public class RobotContainer {
                 driverController.leftBumper().onTrue(Commands.runOnce(() -> {
                         drive.toggleShouldRoundOrientation();
                 }));
-
-                superstate.subscribeToStateMachine((s) -> {
-                        if (s.ordinal() == RobotState.SHOOTING.ordinal()
-                                        || s.ordinal() == RobotState.SHOOTING_RECOVERY.ordinal()) {
-                                isShooting = true;
-                        } else {
-                                isShooting = false;
-                        }
-                }, () -> true);
         }
 
         public Command getAutonomousCommand() {
@@ -161,23 +142,12 @@ public class RobotContainer {
                 return drive.getChassisSpeeds();
         }
 
+        public static boolean isRobotInAimTolerance(double currentAngle, double wantedAngle) {
+                return drive.isInAimTolerance(currentAngle, wantedAngle);
+        }
+
         public static void addVisionMeasurement(Pose2d visionRobotPoseMeters, double timestampSeconds,
                         Matrix<N3, N1> visionMeasurementStdDevs) {
                 drive.addVisionMeasurement(visionRobotPoseMeters, timestampSeconds, visionMeasurementStdDevs);
-        }
-
-        private boolean isReadyToShoot() {
-                boolean cond = drive.isInAimTolerance(getRobotPose().getRotation().getRadians(),
-                                Robot.ballisticsCalculator.getShootingRobotAngle().getRadians())
-                                && shooter.isFlywheelInTolerance()
-                                && Math.abs(getRobotVelocity().vxMetersPerSecond) < Constants.robotMeaningfulVxyMetersPerSecond
-                                && Math.abs(getRobotVelocity().vyMetersPerSecond) < Constants.robotMeaningfulVxyMetersPerSecond
-                                && Math.abs(getRobotVelocity().omegaRadiansPerSecond) < Constants.robotMeaningfulOmegaRadiansPerSecond;
-                return cond;
-
-        }
-
-        private boolean isUnpreparedToShoot() {
-                return !isReadyToShoot();
         }
 }

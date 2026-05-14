@@ -25,7 +25,6 @@ public class LED extends UpstreamSubsystem<RobotState, LEDIO, LEDIOInputsAutoLog
         addSuperstateBehaviour(RobotState.PREPARING_SHOOTER,
                 () -> nextPattern = LEDConstants.kPreparingShooterLedPattern);
         addSuperstateBehaviour(RobotState.SHOOTING, () -> nextPattern = LEDConstants.kShootingLedPattern);
-        addSuperstateBehaviour(RobotState.SHOOTING_RECOVERY, () -> nextPattern = LEDConstants.kShootingLedPattern);
     }
 
     @Override

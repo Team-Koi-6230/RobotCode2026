@@ -96,7 +96,7 @@ public class Intake extends UpstreamSubsystem<RobotState, IntakeIO, IntakeIOInpu
             isShooting = false;
         });
         addSuperstateBehaviour(RobotState.SHOOTING, () -> home());
-        addSuperstateBehaviour(RobotState.SHOOTING_RECOVERY, () -> home());
+        addSuperstateBehaviour(RobotState.PRESHOOTING, () -> openArm());
         addSuperstateBehaviour(RobotState.HOME, () -> home());
     }
 
@@ -114,6 +114,12 @@ public class Intake extends UpstreamSubsystem<RobotState, IntakeIO, IntakeIOInpu
                 () -> inputs.relativePivotAngleDeg < IntakeConstants.kMinOpenAngle.getDegrees(),
                 () -> roller.runVoltage(IntakeConstants.kIntakingVolts)));
         isShooting = false;
+    }
+
+    private void openArm() {
+        clearConditionalActions();
+        io.setTargetAngle(IntakeConstants.kOpenAngle);
+        roller.runVoltage(0);
     }
 
     private void shooting() {

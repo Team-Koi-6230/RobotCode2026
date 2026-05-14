@@ -121,9 +121,8 @@ public class Drive extends UpstreamDrivebase<RobotState> {
 
   private void registerDrives() {
     registerDefaultDrive(this::defaultDrive);
-    registerDriveMode(RobotState.PREPARING_SHOOTER, this::shootingDrive);
+    registerDriveMode(RobotState.PRESHOOTING, this::shootingDrive);
     registerDriveMode(RobotState.SHOOTING, this::shootingDrive);
-    registerDriveMode(RobotState.SHOOTING_RECOVERY, this::shootingDrive);
   }
 
   private ChassisSpeeds defaultDrive(DoubleSupplier xSupplier, DoubleSupplier ySupplier, DoubleSupplier omegaSupplier) {
@@ -245,8 +244,7 @@ public class Drive extends UpstreamDrivebase<RobotState> {
   }
 
   public void runVelocity(ChassisSpeeds speeds) {
-    if (Superstate.getInstance().isCurrentWanted(RobotState.PREPARING_SHOOTER) ||
-        Superstate.getInstance().isCurrentWanted(RobotState.PREPARING_SHOOTER_AND_INTAKING) ||
+    if (Superstate.getInstance().isCurrentWanted(RobotState.PRESHOOTING) ||
         Superstate.getInstance().isCurrentWanted(RobotState.SHOOTING) ||
         Superstate.getInstance().isCurrentWanted(RobotState.SHOOTING_AND_INTAKING)) {
       Rotation2d aimingAngle = Robot.ballisticsCalculator.getShootingRobotAngle();
@@ -425,7 +423,6 @@ public class Drive extends UpstreamDrivebase<RobotState> {
     }
   }
 
-  @Override
   public boolean isReady() {
     return true;
   }

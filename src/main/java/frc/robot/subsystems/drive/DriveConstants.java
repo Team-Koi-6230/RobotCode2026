@@ -93,7 +93,7 @@ public class DriveConstants {
         public static final double turnPIDMaxInput = 2 * Math.PI;
 
         public static final double kPaiming = 7.5, kIaiming = 0, kDaiming = 0.75;
-        public static final Rotation2d kAimingTolerance = Rotation2d.fromDegrees(3);
+        public static final Rotation2d kAimingTolerance = Rotation2d.fromDegrees(4);
 
         public static final double[] kRoundedOrientations = new double[] { 0, Math.PI / 2, Math.PI,
                         Math.PI + (Math.PI / 2) };

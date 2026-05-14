@@ -10,7 +10,10 @@ public class ShooterConstants {
 
         public static final double kUnjamVolts = -4;
 
-        public static final double kRpmErrorTolerance = 100;
+        public static final double kRpmErrorTolerance = 175;
+        public static final double kRpmErrorToleranceLoose = 300;
+
+        public static final double kStaticRpm = 1500;
 
         public static final double kPSim = 0.2;
         public static final double kISim = 0;
@@ -29,7 +32,6 @@ public class ShooterConstants {
 
     public static class Hood {
         public static final double kHoodMaxAngle = 180;
-
         public static final double kNonShootingAngle = 180;
     }
 
