@@ -8,7 +8,7 @@ public class Constants {
     public static final boolean tuningMode = true;
 
     public static final double robotMeaningfulVxyMetersPerSecond = 0.1;
-    public static final double robotMeaningfulOmegaRadiansPerSecond = 0.1;
+    public static final double robotMeaningfulOmegaRadiansPerSecond = 0.3;
 
     public static final Mode simMode = Mode.SIM;
     public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : simMode;

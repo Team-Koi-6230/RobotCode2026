@@ -28,7 +28,7 @@ import team6230.koiupstream.utils.SwerveInputStream;
 public class RobotContainer {
 
         private Superstate superstate = Superstate.getInstance();
-        private static KoiController driverController = new KoiController(0, 0.15,34, 5);
+        private static KoiController driverController = new KoiController(0, 0.15, 34, 5);
 
         private final LoggedDashboardChooser<Command> autoChooser;
 
@@ -133,6 +133,8 @@ public class RobotContainer {
                 HomeButton
                                 .whileTrue(superstate.setWantedSuperstateCommand(RobotState.HOME));
 
+                driverController.povDown().whileTrue(shooter.shoot_hard());
+
                 driverController.leftBumper().onTrue(Commands.runOnce(() -> {
                         drive.toggleShouldRoundOrientation();
                 }));
@@ -165,12 +167,14 @@ public class RobotContainer {
         }
 
         private boolean isReadyToShoot() {
-                return drive.isInAimTolerance(getRobotPose().getRotation().getRadians(),
+                boolean cond = drive.isInAimTolerance(getRobotPose().getRotation().getRadians(),
                                 Robot.ballisticsCalculator.getShootingRobotAngle().getRadians())
                                 && shooter.isFlywheelInTolerance()
                                 && Math.abs(getRobotVelocity().vxMetersPerSecond) < Constants.robotMeaningfulVxyMetersPerSecond
                                 && Math.abs(getRobotVelocity().vyMetersPerSecond) < Constants.robotMeaningfulVxyMetersPerSecond
                                 && Math.abs(getRobotVelocity().omegaRadiansPerSecond) < Constants.robotMeaningfulOmegaRadiansPerSecond;
+                return cond;
+
         }
 
         private boolean isUnpreparedToShoot() {

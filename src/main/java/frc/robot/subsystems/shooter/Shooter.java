@@ -1,6 +1,9 @@
 package frc.robot.subsystems.shooter;
 
+import org.littletonrobotics.junction.AutoLogOutput;
+
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants;
 import frc.robot.Robot;
 import frc.robot.RobotMap;
@@ -89,6 +92,10 @@ public class Shooter extends UpstreamSubsystem<RobotState, ShooterIO, ShooterIOI
         addSuperstateBehaviour(RobotState.SHOOTING_AND_INTAKING, this::shooting);
     }
 
+    public Command shoot_hard() {
+        return run(() -> rollerIO.runVoltage(12));
+    }
+
     @SuppressWarnings("static-access")
     @Override
     public void update() {
@@ -152,6 +159,7 @@ public class Shooter extends UpstreamSubsystem<RobotState, ShooterIO, ShooterIOI
         rollerIO.runVoltage(ShooterConstants.Roller.kFeedVolts);
     }
 
+    @AutoLogOutput
     public boolean isFlywheelInTolerance() {
         return Math.abs(inputs.currentRPM - inputs.targetRPM) < ShooterConstants.Flywheel.kRpmErrorTolerance;
     }
