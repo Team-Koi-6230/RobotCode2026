@@ -1,6 +1,7 @@
 package frc.robot.subsystems.shooter.ballistics;
 
 import org.littletonrobotics.junction.AutoLogOutput;
+import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -31,11 +32,12 @@ public class BallisticsCalculator {
         return BallisticsParameters.kPassingAngle;
     }
 
-    private double getShooterDistanceToHub() {
+    public double getShooterDistanceToHub() {
         var shooterTranslation = getShooterPose().getTranslation();
         var hubTranslation = getAllianceHubCenterTranslation();
-
-        return shooterTranslation.getDistance(hubTranslation);
+      var distance = shooterTranslation.getDistance(hubTranslation);
+        Logger.recordOutput("DistanceToHub", distance);
+        return distance;
     }
 
     public static double convertSurfaceVelocityToRotationPerMinute(double surfaceVelocity) {

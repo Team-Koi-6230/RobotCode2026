@@ -1,11 +1,13 @@
 package frc.robot.subsystems.shooter;
 
 import org.littletonrobotics.junction.AutoLogOutput;
+import org.littletonrobotics.junction.Logger;
 
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants;
 import frc.robot.Robot;
@@ -43,6 +45,9 @@ public class Shooter extends UpstreamSubsystem<RobotState, ShooterIO, ShooterIOI
     private boolean isShooting = false;
 
     private final Debouncer feederDebouncer = new Debouncer(0.15, DebounceType.kFalling);
+
+    private double lastHoodSetpoint = -1.0;
+    private double hoodSetpointTimerStart = 0.0;
 
     private BallisticsCalculator ballisticsCalculator = Robot.ballisticsCalculator;
 
@@ -115,15 +120,29 @@ public class Shooter extends UpstreamSubsystem<RobotState, ShooterIO, ShooterIOI
             }
         }
 
+        ballisticsCalculator.getShooterDistanceToHub();
+
+        var currentWantedHoodSetpoint = ShooterConstants.Hood.kNonShootingAngle;
+        if (isShooting && !DriverStation.isTest()) {
+            currentWantedHoodSetpoint = _ShowcaseShooter ? BallisticsParameters.kShowcaseAngle
+                    : ballisticsCalculator.getHoodSetpoint();
+        }
+
+        boolean isActivelyShootingState = Superstate.getInstance().isCurrentWanted(RobotState.SHOOTING) ||
+                Superstate.getInstance().isCurrentWanted(RobotState.SHOOTING_AND_INTAKING);
+
+        if (Math.abs(currentWantedHoodSetpoint - lastHoodSetpoint) > 0.5 && !isActivelyShootingState) {
+            lastHoodSetpoint = currentWantedHoodSetpoint;
+            hoodSetpointTimerStart = Timer.getFPGATimestamp();
+        }
+
         if (!isShooting || DriverStation.isTest())
             return;
 
         var flywheelSetpoint = ballisticsCalculator.getFlywheelSetpoint();
-        var hoodSetpoint = ballisticsCalculator.getHoodSetpoint();
         if (_ShowcaseShooter) {
             flywheelSetpoint = ballisticsCalculator
                     .convertSurfaceVelocityToRotationPerMinute(BallisticsParameters.kShowcaseSpeed);
-            hoodSetpoint = BallisticsParameters.kShowcaseAngle;
         }
 
         if (Superstate.getInstance().isCurrentWanted(RobotState.PRESHOOTING)) {
@@ -134,8 +153,9 @@ public class Shooter extends UpstreamSubsystem<RobotState, ShooterIO, ShooterIOI
 
         if (inputs.targetRPM != flywheelSetpoint)
             io.runRPM(flywheelSetpoint);
-        if (hoodInputs.servo1Position != hoodSetpoint)
-            hoodIO.setServosPositions(hoodSetpoint);
+
+        if (hoodInputs.servo1Position != currentWantedHoodSetpoint)
+            hoodIO.setServosPositions(currentWantedHoodSetpoint);
     }
 
     @Override
@@ -144,7 +164,7 @@ public class Shooter extends UpstreamSubsystem<RobotState, ShooterIO, ShooterIOI
                 Superstate.getInstance().isCurrentWanted(RobotState.SHOOTING_AND_INTAKING) ||
                 Superstate.getInstance().isCurrentWanted(RobotState.PREPARING_SHOOTER) ||
                 Superstate.getInstance().isCurrentWanted(RobotState.PREPARING_SHOOTER_AND_INTAKING)) {
-            return Math.abs(inputs.targetRPM - inputs.currentRPM) < ShooterConstants.Flywheel.kRpmErrorTolerance;
+            return isFlywheelInTolerance() && isHoodInTolerance();
         }
         return true;
     }
@@ -155,8 +175,9 @@ public class Shooter extends UpstreamSubsystem<RobotState, ShooterIO, ShooterIOI
         hoodIO.setServosPositions(ShooterConstants.Hood.kNonShootingAngle);
         isShooting = false;
 
-        // reseting the debouncer when we stop so it doesn't carry over to the next shot
         feederDebouncer.calculate(false);
+        lastHoodSetpoint = -1.0;
+        hoodSetpointTimerStart = 0.0;
     }
 
     private void unjam() {
@@ -168,7 +189,7 @@ public class Shooter extends UpstreamSubsystem<RobotState, ShooterIO, ShooterIOI
 
     private void prepareShooter() {
         io.runRPM(ShooterConstants.Flywheel.kStaticRpm);
-        rollerIO.runVoltage(_tunedHoodAngle);
+        rollerIO.runVoltage(0);
         hoodIO.setServosPositions(ShooterConstants.Hood.kNonShootingAngle);
     }
 
@@ -183,17 +204,13 @@ public class Shooter extends UpstreamSubsystem<RobotState, ShooterIO, ShooterIOI
                 ballisticsCalculator.getShootingRobotAngle().getRadians(),
                 RobotContainer.getRobotPose().getRotation().getRadians());
 
-        // using strict tolerances to lock in the first shot
-        return isInVelocityTolerance(velocity) && isRobotInAimTolerance && isFlywheelInTolerance();
+        return isInVelocityTolerance(velocity) && isRobotInAimTolerance && isFlywheelInTolerance()
+                && isHoodInTolerance();
     }
 
     private void shooting() {
         isShooting = true;
 
-        // we are already shooting, so we use loose tolerances to decide if we should
-        // keep feeding.
-        // we don't want a tiny RPM drop or a tiny recoil movement to shut the feeder
-        // off mid-cycle.
         ChassisSpeeds velocity = RobotContainer.getRobotVelocity();
 
         boolean isVelocityOkToContinue = Math
@@ -201,7 +218,7 @@ public class Shooter extends UpstreamSubsystem<RobotState, ShooterIO, ShooterIOI
                 Math.abs(velocity.vxMetersPerSecond) < (Constants.robotMeaningfulVxyMetersPerSecond * 2) &&
                 Math.abs(velocity.vyMetersPerSecond) < (Constants.robotMeaningfulVxyMetersPerSecond * 2);
 
-        boolean readyToFeed = isVelocityOkToContinue && isFlywheelInLooseTolerance();
+        boolean readyToFeed = isVelocityOkToContinue && isFlywheelInLooseTolerance() && isHoodInTolerance();
 
         if (feederDebouncer.calculate(readyToFeed)) {
             rollerIO.runVoltage(ShooterConstants.Roller.kFeedVolts);
@@ -218,6 +235,14 @@ public class Shooter extends UpstreamSubsystem<RobotState, ShooterIO, ShooterIOI
     @AutoLogOutput
     public boolean isFlywheelInLooseTolerance() {
         return Math.abs(inputs.currentRPM - inputs.targetRPM) < ShooterConstants.Flywheel.kRpmErrorToleranceLoose;
+    }
+
+    @AutoLogOutput
+    public boolean isHoodInTolerance() {
+        Logger.recordOutput("timer", Timer.getFPGATimestamp());
+        Logger.recordOutput("hoodSetpointTimerStart", hoodSetpointTimerStart);
+
+        return (Timer.getFPGATimestamp() - hoodSetpointTimerStart) >= ShooterConstants.Hood.hoodToPosTimer;
     }
 
     @AutoLogOutput

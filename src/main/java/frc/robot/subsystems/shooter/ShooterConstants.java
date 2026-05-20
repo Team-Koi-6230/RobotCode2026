@@ -33,6 +33,8 @@ public class ShooterConstants {
     public static class Hood {
         public static final double kHoodMaxAngle = 180;
         public static final double kNonShootingAngle = 180;
+
+        public static final double hoodToPosTimer = 0.2;
     }
 
     public static class Roller {

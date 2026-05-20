@@ -29,15 +29,15 @@ public class BallisticsParameters {
 
     static {
         fillMap(kShotHoodAngleMap,
-                new double[] { 1.6, 2.2, 3.2 },
-                new double[] { 1, 82, 110 });
+                new double[] { 1.6, 2.6, 3.6 },
+                new double[] { 1, 80, 100 });
 
         fillMap(kShotFlywheelSpeedMap,
-                new double[] { 1.6, 2.2, 3.2 },
-                new double[] { 14.5, 15.7, 17.15 });
+                new double[] { 1.6, 2.6, 3.6 },
+                new double[] { 15, 15, 16.05 });
 
         fillMap(kTimeOfFlightMap,
-                new double[] { 1.6, 2.2, 3.2 },
+                new double[] { 1.6, 2.6, 3.6 },
                 new double[] { 0.3, 0.57, 0.7 });
     }
 
