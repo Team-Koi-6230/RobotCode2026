@@ -28,7 +28,6 @@ import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -74,6 +73,10 @@ public class Drive extends UpstreamDrivebase<RobotState> {
       new SwerveModulePosition(),
       new SwerveModulePosition()
   };
+
+  private final SwerveModulePosition[] _scratchPositions = new SwerveModulePosition[4];
+  private final SwerveModulePosition[] _scratchDeltas = new SwerveModulePosition[4];
+
   private SwerveDrivePoseEstimator poseEstimator = new SwerveDrivePoseEstimator(kinematics, rawGyroRotation,
       lastModulePositions, Pose2d.kZero);
 
@@ -102,7 +105,7 @@ public class Drive extends UpstreamDrivebase<RobotState> {
     Pathfinding.setPathfinder(new LocalADStarAK());
     PathPlannerLogging.setLogActivePathCallback(
         (activePath) -> {
-          Logger.recordOutput("Odometry/Trajectory", activePath.toArray(new Pose2d[0]));
+          Logger.recordOutput("Odometry/Trajectory", activePath.toArray(new Pose2d[activePath.size()]));
         });
     PathPlannerLogging.setLogTargetPoseCallback(
         (targetPose) -> {
@@ -117,6 +120,11 @@ public class Drive extends UpstreamDrivebase<RobotState> {
             (state) -> Logger.recordOutput("Drive/SysIdState", state.toString())),
         new SysIdRoutine.Mechanism(
             (voltage) -> runCharacterization(voltage.in(Volts)), null, this));
+
+    for (int i = 0; i < 4; i++) {
+      _scratchPositions[i] = new SwerveModulePosition();
+      _scratchDeltas[i] = new SwerveModulePosition();
+    }
   }
 
   private void registerDrives() {
@@ -190,7 +198,7 @@ public class Drive extends UpstreamDrivebase<RobotState> {
     return ChassisSpeeds.fromFieldRelativeSpeeds(
         speeds,
         isFlipped
-            ? this.getRotation().plus(new Rotation2d(Math.PI))
+            ? this.getRotation().plus(Rotation2d.kPi)
             : this.getRotation());
   }
 
@@ -219,25 +227,24 @@ public class Drive extends UpstreamDrivebase<RobotState> {
     double[] sampleTimestamps = modules[0].getOdometryTimestamps();
     int sampleCount = sampleTimestamps.length;
     for (int i = 0; i < sampleCount; i++) {
-      SwerveModulePosition[] modulePositions = new SwerveModulePosition[4];
-      SwerveModulePosition[] moduleDeltas = new SwerveModulePosition[4];
       for (int moduleIndex = 0; moduleIndex < 4; moduleIndex++) {
-        modulePositions[moduleIndex] = modules[moduleIndex].getOdometryPositions()[i];
-        moduleDeltas[moduleIndex] = new SwerveModulePosition(
-            modulePositions[moduleIndex].distanceMeters
-                - lastModulePositions[moduleIndex].distanceMeters,
-            modulePositions[moduleIndex].angle);
-        lastModulePositions[moduleIndex] = modulePositions[moduleIndex];
+        SwerveModulePosition fresh = modules[moduleIndex].getOdometryPositions()[i];
+        _scratchDeltas[moduleIndex].distanceMeters = fresh.distanceMeters
+            - lastModulePositions[moduleIndex].distanceMeters;
+        _scratchDeltas[moduleIndex].angle = fresh.angle;
+        _scratchPositions[moduleIndex].distanceMeters = fresh.distanceMeters;
+        _scratchPositions[moduleIndex].angle = fresh.angle;
+        lastModulePositions[moduleIndex] = fresh;
       }
 
       if (gyroInputs.connected) {
         rawGyroRotation = gyroInputs.odometryYawPositions[i];
       } else {
-        Twist2d twist = kinematics.toTwist2d(moduleDeltas);
+        Twist2d twist = kinematics.toTwist2d(_scratchDeltas);
         rawGyroRotation = rawGyroRotation.plus(new Rotation2d(twist.dtheta));
       }
 
-      poseEstimator.updateWithTime(sampleTimestamps[i], rawGyroRotation, modulePositions);
+      poseEstimator.updateWithTime(sampleTimestamps[i], rawGyroRotation, _scratchPositions);
     }
 
     gyroDisconnectedAlert.set(!gyroInputs.connected && Constants.currentMode != Mode.SIM);
@@ -373,15 +380,9 @@ public class Drive extends UpstreamDrivebase<RobotState> {
    * is thrown away.
    */
   private static Translation2d getLinearVelocityFromJoysticks(double x, double y) {
-    double linearMagnitude = Math.hypot(-x, -y);
-    Rotation2d linearDirection = new Rotation2d(Math.atan2(y, x));
-
-    // Clamp to unit circle — no additional shaping
-    linearMagnitude = Math.min(linearMagnitude, 1.0);
-
-    return new Pose2d(Translation2d.kZero, linearDirection)
-        .transformBy(new Transform2d(linearMagnitude, 0.0, Rotation2d.kZero))
-        .getTranslation();
+    double linearMagnitude = Math.min(Math.hypot(-x, -y), 1.0);
+    double angle = Math.atan2(y, x);
+    return new Translation2d(linearMagnitude * Math.cos(angle), linearMagnitude * Math.sin(angle));
   }
 
   public void toggleShouldRoundOrientation() {

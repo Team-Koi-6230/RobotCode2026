@@ -128,33 +128,34 @@ public class Intake extends UpstreamSubsystem<RobotState, IntakeIO, IntakeIOInpu
         clearConditionalActions();
         io.setTargetAngle(IntakeConstants.kOpenAngle);
         isShooting = true;
-        // when the arm is close enough to open we will close it a bit
+        step = 1;
+
         registerConditionalAction(new ConditionalAction(
-                () -> inputs.relativePivotAngleDeg < IntakeConstants.kMinOpenAngle.getDegrees(), () -> {
-                    // we will set the target to the next step
-                    indexCycling();
-                }));
+                this::shouldAdvanceIndexCycle,
+                this::advanceIndexCycle));
     }
 
-    private void indexCycling() {
+    private boolean shouldAdvanceIndexCycle() {
+        return inputs.relativePivotAngleDeg < IntakeConstants.kMinOpenAngle.getDegrees();
+    }
+
+    private void advanceIndexCycle() {
         roller.runVoltage(IntakeConstants.kShootingVolts);
-        var angleDeg = IntakeConstants.kMinAngle.getDegrees() + (step * IntakeConstants.kStepSizeDegrees);
+
+        double angleDeg = IntakeConstants.kMinAngle.getDegrees() + (step * IntakeConstants.kStepSizeDegrees);
+
         if (angleDeg > IntakeConstants.kMaxAngle.getDegrees()) {
             step = 1;
-            angleDeg = IntakeConstants.kMinOpenAngle.getDegrees();
+            io.setTargetAngle(IntakeConstants.kOpenAngle);
+            return;
         }
+
+        if (inputs.relativePivotAngleDeg <= inputs.pivotTargetAngle - 3) {
+            return;
+        }
+
+        step++;
         io.setTargetAngle(Rotation2d.fromDegrees(angleDeg));
-        if (angleDeg != IntakeConstants.kMinOpenAngle.getDegrees())
-            registerConditionalAction(new ConditionalAction(
-                    () -> inputs.relativePivotAngleDeg > inputs.pivotTargetAngle - 3,
-                    () -> {
-                        step++;
-                        indexCycling();
-                    }));
-        else {
-            isShooting = false;
-            shooting();
-        }
     }
 
     @Override
