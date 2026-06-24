@@ -10,7 +10,7 @@ public class BallisticsParameters {
     public static final double kMaxSpeed = 32.725;
 
     public static final double kPassingSpeed = 18;
-    public static final double kPassingAngle = 180;
+    public static final double kPassingAngle = 140;
 
     public static final double kFlywheelDiameter = 0.1;
 

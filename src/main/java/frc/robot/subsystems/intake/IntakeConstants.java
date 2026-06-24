@@ -11,7 +11,7 @@ public class IntakeConstants {
 
     public static final int kPivotCurrentLimits = 20;
     public static final int kRollerCurrentLimits = 40;
-    public static final int kIntakingVolts = 12;
+    public static final int kIntakingVolts = 9;
     public static final int kShootingVolts = 6;
     public static final boolean kMotorInverted = true;
 

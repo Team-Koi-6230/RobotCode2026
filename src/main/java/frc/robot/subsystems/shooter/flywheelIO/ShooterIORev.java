@@ -107,7 +107,7 @@ public class ShooterIORev implements ShooterIO {
         @Override
         public void setPIDF(double kP, double kI, double kD, double kS, double kV, double kA) {
                 SparkPIDF pidf = new SparkPIDF()
-                                .withInverted(true)
+                                .withInverted(ShooterConstants.Flywheel.kFollowerInverted)
                                 .withP(kP)
                                 .withI(kI)
                                 .withD(kD)

@@ -5,7 +5,7 @@ import edu.wpi.first.wpilibj.RobotBase;
 public class Constants {
     public static boolean disableHAL = false;
     public static final double loopPeriodcSecs = 0.02;
-    public static final boolean tuningMode = true;
+    public static final boolean tuningMode = false;
 
     public static final double robotMeaningfulVxyMetersPerSecond = 0.4;
     public static final double robotMeaningfulOmegaRadiansPerSecond = 0.6;
