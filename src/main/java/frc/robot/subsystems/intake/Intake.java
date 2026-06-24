@@ -95,7 +95,7 @@ public class Intake extends UpstreamSubsystem<RobotState, IntakeIO, IntakeIOInpu
             roller.runVoltage(0);
             isShooting = false;
         });
-        addSuperstateBehaviour(RobotState.SHOOTING, () -> home());
+        addSuperstateBehaviour(RobotState.SHOOTING, () -> shooting());
         addSuperstateBehaviour(RobotState.PRESHOOTING, () -> openArm());
         addSuperstateBehaviour(RobotState.HOME, () -> home());
     }

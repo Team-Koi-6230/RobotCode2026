@@ -46,13 +46,13 @@ public class DriveConstants {
 
         public static final SwerveModuleConfig[] moduleConfigs = new SwerveModuleConfig[] {
                         // Front Left (Index 0)
-                        new SwerveModuleConfig(2, 4, 3, Rotation2d.fromRotations(-0.306641), true, false, true),
+                        new SwerveModuleConfig(2, 4, 3, Rotation2d.fromRotations(-0.302734), true, false, true),
                         // Front Right (Index 1)
-                        new SwerveModuleConfig(5, 7, 6, Rotation2d.fromRotations(-0.199219), true, false, true),
+                        new SwerveModuleConfig(5, 7, 6, Rotation2d.fromRotations(-0.182373), true, false, true),
                         // Back Left (Index 2)
-                        new SwerveModuleConfig(11, 13, 12, Rotation2d.fromRotations(0.462158), true, false, true),
+                        new SwerveModuleConfig(11, 13, 12, Rotation2d.fromRotations(0.461914), true, false, true),
                         // Back Right (Index 3)
-                        new SwerveModuleConfig(8, 10, 9, Rotation2d.fromRotations(0.486328), true, false, true)
+                        new SwerveModuleConfig(8, 10, 9, Rotation2d.fromRotations(0.496582), true, false, true)
         };
 
         public static SwerveModuleConfig getModuleConfig(int index) {
@@ -67,10 +67,10 @@ public class DriveConstants {
         public static final double driveEncoderPositionFactor = 2 * Math.PI / driveMotorReduction;
         public static final double driveEncoderVelocityFactor = (2 * Math.PI) / 60.0 / driveMotorReduction;
 
-        public static final double driveKp = 0.01;
+        public static final double driveKp = 0.001;
         public static final double driveKd = 0.0;
-        public static final double driveKs = 0.3;
-        public static final double driveKv = 0;
+        public static final double driveKs = 0.2;
+        public static final double driveKv = 0.04;
         public static final double driveSimP = 0.05;
         public static final double driveSimD = 0.0;
         public static final double driveSimKs = 0.0;

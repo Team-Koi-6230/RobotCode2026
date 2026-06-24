@@ -28,7 +28,7 @@ public class IntakeConstants {
     public static final Rotation2d kMinOpenAngle = Rotation2d.fromDegrees(7);
     public static final double kErrorToleranceDeg = 2;
 
-    public static final double kWantedSteps = 1;
+    public static final double kWantedSteps = 2;
     public static final double kStepSizeDegrees = kClosedAngle.getDegrees() / kWantedSteps;
 
     public static final double kMOIpivot = 0.1;

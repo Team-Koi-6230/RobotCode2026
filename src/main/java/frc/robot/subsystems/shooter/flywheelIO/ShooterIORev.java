@@ -34,7 +34,7 @@ public class ShooterIORev implements ShooterIO {
 
                 SparkFlexConfig m_config = new SparkFlexConfig();
                 m_config
-                                .inverted(true)
+                                .inverted(false)
                                 .smartCurrentLimit(ShooterConstants.Flywheel.kShooterSmartCurrentLimit)
                                 .idleMode(IdleMode.kCoast)
                                 .voltageCompensation(12);
