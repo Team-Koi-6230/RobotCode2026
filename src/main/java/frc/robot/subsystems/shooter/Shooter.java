@@ -159,7 +159,7 @@ public class Shooter extends UpstreamSubsystem<RobotState, ShooterIO, ShooterIOI
     }
 
     @Override
-    public boolean isReady() {
+    public boolean isReady() { 
         if (Superstate.getInstance().isCurrentWanted(RobotState.SHOOTING) ||
                 Superstate.getInstance().isCurrentWanted(RobotState.SHOOTING_AND_INTAKING) ||
                 Superstate.getInstance().isCurrentWanted(RobotState.PREPARING_SHOOTER) ||
