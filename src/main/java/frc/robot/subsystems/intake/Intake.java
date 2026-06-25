@@ -1,6 +1,7 @@
 package frc.robot.subsystems.intake;
 
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.Timer;
 import frc.robot.Constants;
 import frc.robot.Robot;
 import frc.robot.RobotMap;
@@ -28,6 +29,9 @@ public class Intake extends UpstreamSubsystem<RobotState, IntakeIO, IntakeIOInpu
     private int step = 1;
     private boolean isShooting = false;
 
+    private double oscillationStartTime = -1;
+
+    // #region tunables
     @Tunable
     private double tunablePivotSetpoint = IntakeConstants.kMinAngle.getDegrees();
 
@@ -62,6 +66,7 @@ public class Intake extends UpstreamSubsystem<RobotState, IntakeIO, IntakeIOInpu
     @Tunable
     private double kMaxAccelRadPerSecSquared = Robot.isReal() ? IntakeConstants.kMaxAcceleration
             : IntakeConstants.kMaxAccelRadPerSecSquared;
+    // #endregion
 
     public Intake() {
         super("Intake", new IntakeIOInputsAutoLogged());
@@ -95,7 +100,10 @@ public class Intake extends UpstreamSubsystem<RobotState, IntakeIO, IntakeIOInpu
             roller.runVoltage(0);
             isShooting = false;
         });
-        addSuperstateBehaviour(RobotState.SHOOTING, () -> shooting());
+        addSuperstateBehaviour(RobotState.SHOOTING, () -> {
+            roller.runVoltage(IntakeConstants.kShootingVolts);
+            oscillating();
+        });
         addSuperstateBehaviour(RobotState.PRESHOOTING, () -> openArm());
         addSuperstateBehaviour(RobotState.HOME, () -> home());
     }
@@ -133,6 +141,28 @@ public class Intake extends UpstreamSubsystem<RobotState, IntakeIO, IntakeIOInpu
         registerConditionalAction(new ConditionalAction(
                 this::shouldAdvanceIndexCycle,
                 this::advanceIndexCycle));
+    }
+
+    private void oscillating() {
+        clearConditionalActions();
+        oscillationStartTime = Timer.getFPGATimestamp();
+        roller.runVoltage(0);
+
+        registerConditionalAction(new ConditionalAction(
+                () -> {
+                    double elapsed = Timer.getFPGATimestamp() - oscillationStartTime;
+                    long cycleIndex = (long) (elapsed / IntakeConstants.kOscillationIntervalSecs);
+                    return cycleIndex % 2 == 0;
+                },
+                () -> io.setTargetAngle(IntakeConstants.kOpenAngle)));
+
+        registerConditionalAction(new ConditionalAction(
+                () -> {
+                    double elapsed = Timer.getFPGATimestamp() - oscillationStartTime;
+                    long cycleIndex = (long) (elapsed / IntakeConstants.kOscillationIntervalSecs);
+                    return cycleIndex % 2 != 0;
+                },
+                () -> io.setTargetAngle(IntakeConstants.kClosedAngle)));
     }
 
     private boolean shouldAdvanceIndexCycle() {
