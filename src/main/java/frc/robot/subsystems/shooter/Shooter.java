@@ -47,9 +47,11 @@ public class Shooter extends UpstreamSubsystem<RobotState, ShooterIO, ShooterIOI
     private final Debouncer feederDebouncer = new Debouncer(0.15, DebounceType.kFalling);
 
     private double lastHoodSetpoint = -1.0;
-    private double hoodSetpointTimerStart = 0.0;
+    private double hoodSetpointTimerStart = Double.MAX_VALUE;
 
     private BallisticsCalculator ballisticsCalculator = Robot.ballisticsCalculator;
+
+    // #region tunables
 
     @Tunable
     private boolean _ShowcaseShooter = false;
@@ -76,6 +78,8 @@ public class Shooter extends UpstreamSubsystem<RobotState, ShooterIO, ShooterIOI
 
     @Tunable
     private double kA = Robot.isReal() ? ShooterConstants.Flywheel.kA : ShooterConstants.Flywheel.kASim;
+
+    // #endregion
 
     public Shooter() {
         super("Shooter", new ShooterIOInputsAutoLogged());
@@ -159,7 +163,7 @@ public class Shooter extends UpstreamSubsystem<RobotState, ShooterIO, ShooterIOI
     }
 
     @Override
-    public boolean isReady() { 
+    public boolean isReady() {
         if (Superstate.getInstance().isCurrentWanted(RobotState.SHOOTING) ||
                 Superstate.getInstance().isCurrentWanted(RobotState.SHOOTING_AND_INTAKING) ||
                 Superstate.getInstance().isCurrentWanted(RobotState.PREPARING_SHOOTER) ||
@@ -177,7 +181,7 @@ public class Shooter extends UpstreamSubsystem<RobotState, ShooterIO, ShooterIOI
 
         feederDebouncer.calculate(false);
         lastHoodSetpoint = -1.0;
-        hoodSetpointTimerStart = 0.0;
+        hoodSetpointTimerStart = Double.MAX_VALUE;
     }
 
     private void unjam() {
@@ -241,6 +245,9 @@ public class Shooter extends UpstreamSubsystem<RobotState, ShooterIO, ShooterIOI
     public boolean isHoodInTolerance() {
         Logger.recordOutput("timer", Timer.getFPGATimestamp());
         Logger.recordOutput("hoodSetpointTimerStart", hoodSetpointTimerStart);
+
+        if (hoodSetpointTimerStart == Double.MAX_VALUE)
+            return false;
 
         return (Timer.getFPGATimestamp() - hoodSetpointTimerStart) >= ShooterConstants.Hood.hoodToPosTimer;
     }
