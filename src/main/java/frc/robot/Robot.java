@@ -7,12 +7,19 @@ import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 import org.littletonrobotics.urcl.URCL;
 
 import edu.wpi.first.cameraserver.CameraServer;
+import edu.wpi.first.hal.AllianceStationID;
 import edu.wpi.first.wpilibj.DataLogManager;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.simulation.DriverStationSim;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.FieldConstants.LinesVertical;
 import frc.robot.subsystems.shooter.ballistics.BallisticsCalculator;
 import frc.robot.util.AllianceFlipUtil;
+import frc.robot.util.rebuilt.ShiftUtil;
 import team6230.koiupstream.superstates.Superstate;
 import team6230.koiupstream.tunable.Tunable;
 import team6230.koiupstream.tunable.TunableManager;
@@ -23,6 +30,8 @@ public class Robot extends LoggedRobot {
   private final RobotContainer m_robotContainer;
 
   public static BallisticsCalculator ballisticsCalculator;
+
+  private final Field2d m_field = new Field2d();
 
   @Tunable
   public static boolean isShowcaseMode = false;
@@ -52,6 +61,8 @@ public class Robot extends LoggedRobot {
   @Override
   public void robotInit() {
     CameraServer.startAutomaticCapture();
+
+    SmartDashboard.putData("Field", m_field);
   }
 
   @Override
@@ -60,6 +71,8 @@ public class Robot extends LoggedRobot {
     Superstate.getInstance().updateLogic();
     Logger.recordOutput("CurrentSuperstate", Superstate.getInstance().getSuperstate().toString());
     Logger.recordOutput("CurrentWantedSuperstate", Superstate.getInstance().getWantedSuperstate().toString());
+
+    m_field.setRobotPose(RobotContainer.getRobotPose());
   }
 
   @Override
@@ -77,6 +90,35 @@ public class Robot extends LoggedRobot {
       m_autonomousCommand.cancel();
     }
     Superstate.getInstance().setDefaultWantedState(RobotState.IDLE);
+    CommandScheduler.getInstance().clearComposedCommands();
+    ShiftUtil.initialize();
+  }
+
+  @Override
+  public void teleopPeriodic() {
+    ShiftUtil.publishShiftInfo();
+  }
+
+  @Override
+  public void disabledPeriodic() {
+    updateAlliance();
+    SmartDashboard.putBoolean(
+        "Shift/Alliance Win Override",
+        ShiftUtil.getAllianceWinOverride().orElse(false));
+  }
+
+  public void updateAlliance() {
+    if (Robot.isSimulation()) {
+      Constants.isRedAlliance = DriverStationSim.getAllianceStationId() == AllianceStationID.Red1
+          || DriverStationSim.getAllianceStationId() == AllianceStationID.Red2
+          || DriverStationSim.getAllianceStationId() == AllianceStationID.Red3;
+    } else {
+      DriverStation.getAlliance()
+          .ifPresentOrElse(
+              alliance -> Constants.isRedAlliance = alliance == DriverStation.Alliance.Red, () -> {
+                SmartDashboard.putNumber("Last unable to set alliance", Timer.getFPGATimestamp());
+              });
+    }
   }
 
   public static boolean isInAllianceZone() {
