@@ -29,7 +29,7 @@ public class Robot extends LoggedRobot {
 
   private final RobotContainer m_robotContainer;
 
-  public static BallisticsCalculator ballisticsCalculator;
+  public static BallisticsCalculator ballisticsCalculator = new BallisticsCalculator();
 
   private final Field2d m_field = new Field2d();
 
@@ -54,13 +54,14 @@ public class Robot extends LoggedRobot {
     Superstate.getInstance().setSuperstateSet(RobotState.IDLE);
     TunableManager.tuningModeEnabled = Constants.tuningMode;
 
-    ballisticsCalculator = new BallisticsCalculator();
     m_robotContainer = new RobotContainer();
   }
 
   @Override
   public void robotInit() {
     CameraServer.startAutomaticCapture();
+
+    SmartDashboard.putBoolean("Long Pass", false);
 
     SmartDashboard.putData("Field", m_field);
   }

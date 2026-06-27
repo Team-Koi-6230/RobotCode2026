@@ -124,8 +124,6 @@ public class Shooter extends UpstreamSubsystem<RobotState, ShooterIO, ShooterIOI
             }
         }
 
-        ballisticsCalculator.getShooterDistanceToHub();
-
         var currentWantedHoodSetpoint = ShooterConstants.Hood.kNonShootingAngle;
         if (isShooting && !DriverStation.isTest()) {
             currentWantedHoodSetpoint = _ShowcaseShooter ? BallisticsParameters.kShowcaseAngle

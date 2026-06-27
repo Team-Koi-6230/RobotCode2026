@@ -7,6 +7,8 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.networktables.NetworkTableEntry;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import frc.robot.FieldConstants;
 import frc.robot.FieldConstants.LinesHorizontal;
 import frc.robot.FieldConstants.LinesVertical;
@@ -15,13 +17,19 @@ import frc.robot.RobotContainer;
 import frc.robot.util.AllianceFlipUtil;
 
 public class BallisticsCalculator {
+    private final NetworkTableEntry longPass = NetworkTableInstance.getDefault()
+            .getTable("SmartDashboard")
+            .getEntry("Long Pass");
+
     public double getFlywheelSetpoint() {
         if (Robot.isShowcaseMode)
             return BallisticsParameters.kShowcaseSpeed;
         if (Robot.isInAllianceZone())
             return convertSurfaceVelocityToRotationPerMinute(
                     BallisticsParameters.kShotFlywheelSpeedMap.get(getShooterDistanceToHub()));
-        return convertSurfaceVelocityToRotationPerMinute(BallisticsParameters.kPassingSpeed);
+        return convertSurfaceVelocityToRotationPerMinute(
+                longPass.getBoolean(false) ? BallisticsParameters.kLongPassingSpeed
+                        : BallisticsParameters.kPassingSpeed);
     }
 
     public double getHoodSetpoint() {
@@ -29,13 +37,14 @@ public class BallisticsCalculator {
             return BallisticsParameters.kShowcaseAngle;
         if (Robot.isInAllianceZone())
             return BallisticsParameters.kShotHoodAngleMap.get(getShooterDistanceToHub());
-        return BallisticsParameters.kPassingAngle;
+        return longPass.getBoolean(false) ? BallisticsParameters.kLongPassingAngle
+                : BallisticsParameters.kPassingAngle;
     }
 
     public double getShooterDistanceToHub() {
         var shooterTranslation = getShooterPose().getTranslation();
         var hubTranslation = getAllianceHubCenterTranslation();
-      var distance = shooterTranslation.getDistance(hubTranslation);
+        var distance = shooterTranslation.getDistance(hubTranslation);
         Logger.recordOutput("DistanceToHub", distance);
         return distance;
     }
