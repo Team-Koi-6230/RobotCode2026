@@ -98,7 +98,7 @@ public class Drive extends UpstreamDrivebase<RobotState> {
         this::getChassisSpeeds,
         this::runVelocity,
         new PPHolonomicDriveController(
-            new PIDConstants(7, 0.0, 0.0), new PIDConstants(1, 0.0, 0.0)),
+            new PIDConstants(3, 0.0, 0.0), new PIDConstants(1, 0.0, 0.0)),
         ppConfig,
         () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
         this);

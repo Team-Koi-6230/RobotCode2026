@@ -32,17 +32,16 @@ import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkFlexConfig;
-import com.revrobotics.spark.config.SparkMaxConfig;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.Timer;
 import frc.robot.subsystems.drive.DriveConstants.SwerveModuleConfig;
 
 /**
  * Module IO implementation for Spark Flex drive motor controller, Spark Flex
- * turn motor controller,
- * and CANCoder
+ * turn motor controller, and CANCoder.
  */
 public class ModuleIOSpark implements ModuleIO {
 
@@ -106,7 +105,7 @@ public class ModuleIOSpark implements ModuleIO {
                                                 PersistMode.kPersistParameters));
                 tryUntilOk(driveSpark, 5, () -> driveEncoder.setPosition(0.0));
 
-                var turnConfig = new SparkMaxConfig();
+                var turnConfig = new SparkFlexConfig();
                 turnConfig
                                 .inverted(swerveConfig.turnInverted)
                                 .idleMode(IdleMode.kBrake)
@@ -121,10 +120,10 @@ public class ModuleIOSpark implements ModuleIO {
                                 .positionWrappingInputRange(turnPIDMinInput, turnPIDMaxInput)
                                 .pid(DriveConstants.turnKp, 0.0, DriveConstants.turnKd);
                 turnConfig.signals
-                                .absoluteEncoderPositionAlwaysOn(true)
-                                .absoluteEncoderPositionPeriodMs((int) (1000.0 / odometryFrequency))
-                                .absoluteEncoderVelocityAlwaysOn(true)
-                                .absoluteEncoderVelocityPeriodMs(20)
+                                .primaryEncoderPositionAlwaysOn(true)
+                                .primaryEncoderPositionPeriodMs((int) (1000.0 / odometryFrequency))
+                                .primaryEncoderVelocityAlwaysOn(true)
+                                .primaryEncoderVelocityPeriodMs(20)
                                 .appliedOutputPeriodMs(20)
                                 .busVoltagePeriodMs(20)
                                 .outputCurrentPeriodMs(20);
@@ -135,18 +134,26 @@ public class ModuleIOSpark implements ModuleIO {
                                                 turnConfig, ResetMode.kResetSafeParameters,
                                                 PersistMode.kPersistParameters));
 
+                // Configure CANcoder
                 CANcoderConfiguration cancoderConf = new CANcoderConfiguration();
-
                 cancoderConf.MagnetSensor.MagnetOffset = -swerveConfig.angleOffset.getRotations();
                 cancoderConf.MagnetSensor.SensorDirection = swerveConfig.cancoderInverted
                                 ? SensorDirectionValue.CounterClockwise_Positive
                                 : SensorDirectionValue.Clockwise_Positive;
-
                 turnEncoder.getConfigurator().apply(cancoderConf);
 
-                // This will probably pull 0.0 during boot because CAN hasn't updated yet,
-                // but it doesn't matter because we will re-seed it in disabled periodic!
-                turnSpark.getEncoder().setPosition(getAbsolutePosition());
+                double seedPosition = 0.0;
+                double seedDeadline = Timer.getFPGATimestamp() + 0.5;
+                while (Timer.getFPGATimestamp() < seedDeadline) {
+                        double abs = getAbsolutePosition();
+                        if (Math.abs(abs) > 1e-6) {
+                                seedPosition = abs;
+                                break;
+                        }
+                        Timer.delay(0.010);
+                }
+                final double finalSeed = seedPosition;
+                tryUntilOk(turnSpark, 5, () -> turnSpark.getEncoder().setPosition(finalSeed));
 
                 // Create odometry queues
                 timestampQueue = SparkOdometryThread.getInstance().makeTimestampQueue();
