@@ -128,6 +128,8 @@ public class RobotContainer {
                 driverController.leftBumper().onTrue(Commands.runOnce(() -> {
                         drive.toggleShouldRoundOrientation();
                 }));
+
+                driverController.y().onTrue(Commands.runOnce(() -> activateDefensiveSwerve()));
         }
 
         public Command getAutonomousCommand() {
@@ -144,6 +146,10 @@ public class RobotContainer {
 
         public static boolean isRobotInAimTolerance(double currentAngle, double wantedAngle) {
                 return drive.isInAimTolerance(currentAngle, wantedAngle);
+        }
+
+        public static void activateDefensiveSwerve() {
+                drive.toggleXLock();
         }
 
         public static void addVisionMeasurement(Pose2d visionRobotPoseMeters, double timestampSeconds,

@@ -150,6 +150,7 @@ public class Shooter extends UpstreamSubsystem<RobotState, ShooterIO, ShooterIOI
         if (Superstate.getInstance().isCurrentWanted(RobotState.PRESHOOTING)) {
             if (isFinishedPreShooting()) {
                 Superstate.getInstance().setWantedSuperstate(RobotState.SHOOTING);
+                RobotContainer.activateDefensiveSwerve();
             }
         }
 

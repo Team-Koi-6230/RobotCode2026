@@ -19,14 +19,14 @@ public class ShooterConstants {
         public static final double kISim = 0;
         public static final double kDSim = 0;
         public static final double kSSim = 0.01;
-        public static final double kVSim = 0.01651;
+        public static final double kVSim = 0.01525;
         public static final double kASim = 0;
 
-        public static final double kP = 0.0005;//0.00008;
+        public static final double kP = 0.0005;// 0.00008;
         public static final double kI = 0;
         public static final double kD = 0;
         public static final double kS = 0.001;// 0.01
-        public static final double kV = 0.00175;//0.00182;
+        public static final double kV = 0.00175;// 0.00182;
         public static final double kA = 0;
     }
 

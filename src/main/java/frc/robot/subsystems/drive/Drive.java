@@ -65,6 +65,15 @@ public class Drive extends UpstreamDrivebase<RobotState> {
   @AutoLogOutput
   private boolean _shouldRoundOrientation = false;
 
+  @AutoLogOutput
+  private boolean _xLockActive = false;
+
+  /** Minimum combined joystick magnitude that auto-releases X-lock. */
+  private static final double kXLockReleaseThreshold = 0.1;
+
+  // Pre-allocated array so runVelocity() never allocates during X-lock.
+  private final SwerveModuleState[] _xLockStates = new SwerveModuleState[4];
+
   private SwerveDriveKinematics kinematics = new SwerveDriveKinematics(moduleTranslations);
   private Rotation2d rawGyroRotation = Rotation2d.kZero;
   private SwerveModulePosition[] lastModulePositions = new SwerveModulePosition[] {
@@ -91,6 +100,10 @@ public class Drive extends UpstreamDrivebase<RobotState> {
     _aimingPID.enableContinuousInput(-Math.PI, Math.PI);
 
     registerDrives();
+
+    for (int i = 0; i < 4; i++) {
+      _xLockStates[i] = new SwerveModuleState(0.0, moduleTranslations[i].getAngle());
+    }
 
     AutoBuilder.configure(
         this::getPose,
@@ -127,6 +140,18 @@ public class Drive extends UpstreamDrivebase<RobotState> {
     }
   }
 
+  public void toggleXLock() {
+    _xLockActive = !_xLockActive;
+    Logger.recordOutput("Drive/XLockToggled", _xLockActive);
+  }
+
+  /** Returns true while the robot is actively X-locked. */
+  public boolean isXLocked() {
+    return _xLockActive;
+  }
+
+  // -------------------------------------------------------------------------
+
   private void registerDrives() {
     registerDefaultDrive(this::defaultDrive);
     registerDriveMode(RobotState.PRESHOOTING, this::shootingDrive);
@@ -134,8 +159,17 @@ public class Drive extends UpstreamDrivebase<RobotState> {
   }
 
   private ChassisSpeeds defaultDrive(DoubleSupplier xSupplier, DoubleSupplier ySupplier, DoubleSupplier omegaSupplier) {
-    Translation2d linearVelocity = getLinearVelocityFromJoysticks(
-        xSupplier.getAsDouble(), ySupplier.getAsDouble());
+    double rawX = xSupplier.getAsDouble();
+    double rawY = ySupplier.getAsDouble();
+
+    // Auto-release X-lock when the driver pushes the stick hard enough.
+    // This lets them just drive out of the lock without pressing the button again.
+    if (_xLockActive && Math.hypot(rawX, rawY) > kXLockReleaseThreshold) {
+      _xLockActive = false;
+      Logger.recordOutput("Drive/XLockAutoReleased", true);
+    }
+
+    Translation2d linearVelocity = getLinearVelocityFromJoysticks(rawX, rawY);
 
     ChassisSpeeds measured = getChassisSpeeds();
     double currentSpeed = Math.hypot(measured.vxMetersPerSecond, measured.vyMetersPerSecond);
@@ -251,6 +285,17 @@ public class Drive extends UpstreamDrivebase<RobotState> {
   }
 
   public void runVelocity(ChassisSpeeds speeds) {
+    if (_xLockActive) {
+      Logger.recordOutput("SwerveStates/Setpoints", _xLockStates);
+      Logger.recordOutput("SwerveChassisSpeeds/Setpoints", new ChassisSpeeds());
+      for (int i = 0; i < 4; i++) {
+        modules[i].runSetpoint(_xLockStates[i]);
+      }
+      Logger.recordOutput("SwerveStates/SetpointsOptimized", _xLockStates);
+      return; // skip all normal velocity handling
+    }
+    // -----------------------------------------------------------------
+
     if (Superstate.getInstance().isCurrentWanted(RobotState.PRESHOOTING) ||
         Superstate.getInstance().isCurrentWanted(RobotState.SHOOTING) ||
         Superstate.getInstance().isCurrentWanted(RobotState.SHOOTING_AND_INTAKING)) {
