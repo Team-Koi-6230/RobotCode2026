@@ -28,7 +28,7 @@ import team6230.koiupstream.utils.SwerveInputStream;
 public class RobotContainer {
 
         private Superstate superstate = Superstate.getInstance();
-        private static KoiController driverController = new KoiController(0, 0.15, 34, 5);
+        private static KoiController driverController = new KoiController(0, 0.15, 8, 5);
 
         private final LoggedDashboardChooser<Command> autoChooser;
 

@@ -146,15 +146,6 @@ public class Intake extends UpstreamSubsystem<RobotState, IntakeIO, IntakeIOInpu
     private void oscillating() {
         clearConditionalActions();
         oscillationStartTime = Timer.getFPGATimestamp();
-        roller.runVoltage(0);
-
-        registerConditionalAction(new ConditionalAction(
-                () -> {
-                    double elapsed = Timer.getFPGATimestamp() - oscillationStartTime;
-                    long cycleIndex = (long) (elapsed / IntakeConstants.kOscillationIntervalSecs);
-                    return cycleIndex % 2 == 0;
-                },
-                () -> io.setTargetAngle(IntakeConstants.kOpenAngle)));
 
         registerConditionalAction(new ConditionalAction(
                 () -> {
@@ -162,7 +153,10 @@ public class Intake extends UpstreamSubsystem<RobotState, IntakeIO, IntakeIOInpu
                     long cycleIndex = (long) (elapsed / IntakeConstants.kOscillationIntervalSecs);
                     return cycleIndex % 2 != 0;
                 },
-                () -> io.setTargetAngle(IntakeConstants.kClosedAngle)));
+                () -> {
+                    io.setTargetAngle(IntakeConstants.kClosedAngle);
+                    oscillationStartTime = Timer.getFPGATimestamp();
+                }));
     }
 
     private boolean shouldAdvanceIndexCycle() {
@@ -190,6 +184,16 @@ public class Intake extends UpstreamSubsystem<RobotState, IntakeIO, IntakeIOInpu
 
     @Override
     public void update() {
+        if (Superstate.getInstance().isCurrentWanted(RobotState.SHOOTING)) {
+            double elapsed = Timer.getFPGATimestamp() - oscillationStartTime;
+            long cycleIndex = (long) (elapsed / IntakeConstants.kOscillationIntervalSecs);
+            if (cycleIndex % 2 == 0) {
+                io.setTargetAngle(IntakeConstants.kOpenAngle);
+            } else {
+                io.setTargetAngle(IntakeConstants.kClosedAngle);
+            }
+        }
+
         if (TunableManager.checkChanged(this)) {
             io.setPIDF(kP, kI, kD, kS, kG, kV, kA, kMaxVelocityRadPerSec, kMaxAccelRadPerSecSquared);
             io.setTargetAngle(Rotation2d.fromDegrees(tunablePivotSetpoint));

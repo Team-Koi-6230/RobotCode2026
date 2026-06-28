@@ -5,6 +5,7 @@ import static frc.robot.subsystems.drive.DriveConstants.driveBaseRadius;
 import static frc.robot.subsystems.drive.DriveConstants.maxSpeedMetersPerSec;
 import static frc.robot.subsystems.drive.DriveConstants.moduleTranslations;
 import static frc.robot.subsystems.drive.DriveConstants.ppConfig;
+import static frc.robot.subsystems.drive.DriveConstants.slowMaxSpeedMeterPerSec;
 
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -26,6 +27,7 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
+import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -36,6 +38,8 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.networktables.BooleanSubscriber;
+import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -68,11 +72,19 @@ public class Drive extends UpstreamDrivebase<RobotState> {
   @AutoLogOutput
   private boolean _xLockActive = false;
 
-  /** Minimum combined joystick magnitude that auto-releases X-lock. */
   private static final double kXLockReleaseThreshold = 0.1;
 
-  // Pre-allocated array so runVelocity() never allocates during X-lock.
   private final SwerveModuleState[] _xLockStates = new SwerveModuleState[4];
+
+  private final SlewRateLimiter _vxLimiter = new SlewRateLimiter(DriveConstants.kTeleopSlewRateMetersPerSecSq);
+  private final SlewRateLimiter _vyLimiter = new SlewRateLimiter(DriveConstants.kTeleopSlewRateMetersPerSecSq);
+
+  public static final String kSlowModeNTKey = "/SmartDashboard/Drive/SlowMode";
+
+  @AutoLogOutput
+  private boolean _slowModeActive = false;
+
+  private final BooleanSubscriber _slowModeSubscriber;
 
   private SwerveDriveKinematics kinematics = new SwerveDriveKinematics(moduleTranslations);
   private Rotation2d rawGyroRotation = Rotation2d.kZero;
@@ -99,6 +111,10 @@ public class Drive extends UpstreamDrivebase<RobotState> {
     _aimingPID = new PIDController(DriveConstants.kPaiming, DriveConstants.kIaiming, DriveConstants.kDaiming);
     _aimingPID.enableContinuousInput(-Math.PI, Math.PI);
 
+    _slowModeSubscriber = NetworkTableInstance.getDefault()
+        .getBooleanTopic(kSlowModeNTKey)
+        .subscribe(false);
+
     registerDrives();
 
     for (int i = 0; i < 4; i++) {
@@ -111,7 +127,7 @@ public class Drive extends UpstreamDrivebase<RobotState> {
         this::getChassisSpeeds,
         this::runVelocity,
         new PPHolonomicDriveController(
-            new PIDConstants(3, 0.0, 0.0), new PIDConstants(1, 0.0, 0.0)),
+            new PIDConstants(4, 0.0, 0), new PIDConstants(1, 0.0, 0.0)),
         ppConfig,
         () -> DriverStation.getAlliance().orElse(Alliance.Blue) == Alliance.Red,
         this);
@@ -141,16 +157,31 @@ public class Drive extends UpstreamDrivebase<RobotState> {
   }
 
   public void toggleXLock() {
+    ChassisSpeeds measured = getChassisSpeeds();
+    _vxLimiter.reset(measured.vxMetersPerSecond);
+    _vyLimiter.reset(measured.vyMetersPerSecond);
+
     _xLockActive = !_xLockActive;
     Logger.recordOutput("Drive/XLockToggled", _xLockActive);
   }
 
-  /** Returns true while the robot is actively X-locked. */
   public boolean isXLocked() {
     return _xLockActive;
   }
 
-  // -------------------------------------------------------------------------
+  public void toggleSlowMode() {
+    _slowModeActive = !_slowModeActive;
+    // Push the new value back to NT so the dashboard stays in sync.
+    NetworkTableInstance.getDefault()
+        .getBooleanTopic(kSlowModeNTKey)
+        .publish()
+        .set(_slowModeActive);
+    Logger.recordOutput("Drive/SlowModeToggled", _slowModeActive);
+  }
+
+  public boolean isSlowMode() {
+    return _slowModeActive;
+  }
 
   private void registerDrives() {
     registerDefaultDrive(this::defaultDrive);
@@ -162,9 +193,10 @@ public class Drive extends UpstreamDrivebase<RobotState> {
     double rawX = xSupplier.getAsDouble();
     double rawY = ySupplier.getAsDouble();
 
-    // Auto-release X-lock when the driver pushes the stick hard enough.
-    // This lets them just drive out of the lock without pressing the button again.
     if (_xLockActive && Math.hypot(rawX, rawY) > kXLockReleaseThreshold) {
+      ChassisSpeeds measured = getChassisSpeeds();
+      _vxLimiter.reset(measured.vxMetersPerSecond);
+      _vyLimiter.reset(measured.vyMetersPerSecond);
       _xLockActive = false;
       Logger.recordOutput("Drive/XLockAutoReleased", true);
     }
@@ -181,6 +213,17 @@ public class Drive extends UpstreamDrivebase<RobotState> {
 
     Logger.recordOutput("Drive/FalloffMultiplier", falloff);
     Logger.recordOutput("Drive/SpeedRatio", speedRatio);
+
+    double maxSpeed = getMaxLinearSpeedMetersPerSec();
+    double vxTarget = linearVelocity.getX() * maxSpeed;
+    double vyTarget = linearVelocity.getY() * maxSpeed;
+    double vxSlewed = _vxLimiter.calculate(vxTarget);
+    double vySlewed = _vyLimiter.calculate(vyTarget);
+
+    Logger.recordOutput("Drive/VxTarget", vxTarget);
+    Logger.recordOutput("Drive/VyTarget", vyTarget);
+    Logger.recordOutput("Drive/VxSlewed", vxSlewed);
+    Logger.recordOutput("Drive/VySlewed", vySlewed);
 
     double omega = 0;
 
@@ -201,10 +244,9 @@ public class Drive extends UpstreamDrivebase<RobotState> {
       }
     }
 
-    return convertFieldRelativeSpeedsToRobotRelative(new ChassisSpeeds(
-        linearVelocity.getX() * this.getMaxLinearSpeedMetersPerSec(),
-        linearVelocity.getY() * this.getMaxLinearSpeedMetersPerSec(),
-        omega));
+    omega = MathUtil.clamp(omega, -getMaxAngularSpeedRadPerSec(), getMaxAngularSpeedRadPerSec());
+
+    return convertFieldRelativeSpeedsToRobotRelative(new ChassisSpeeds(vxSlewed, vySlewed, omega));
   }
 
   @AutoLogOutput
@@ -218,7 +260,9 @@ public class Drive extends UpstreamDrivebase<RobotState> {
         xSupplier.getAsDouble(), ySupplier.getAsDouble());
     Rotation2d aimingAngle = Robot.ballisticsCalculator.getShootingRobotAngle();
 
-    double omega = _aimingPID.calculate(getRotation().getRadians(), aimingAngle.getRadians());
+    double omega = MathUtil.clamp(
+        _aimingPID.calculate(getRotation().getRadians(), aimingAngle.getRadians()),
+        -getMaxAngularSpeedRadPerSec(), getMaxAngularSpeedRadPerSec());
 
     return convertFieldRelativeSpeedsToRobotRelative(new ChassisSpeeds(
         linearVelocity.getX() * getMaxLinearSpeedMetersPerSec(),
@@ -245,6 +289,12 @@ public class Drive extends UpstreamDrivebase<RobotState> {
       module.periodic();
     }
     odometryLock.unlock();
+
+    boolean ntSlowMode = _slowModeSubscriber.get();
+    if (ntSlowMode != _slowModeActive) {
+      _slowModeActive = ntSlowMode;
+      Logger.recordOutput("Drive/SlowModeActive", _slowModeActive);
+    }
 
     if (DriverStation.isDisabled()) {
       for (var module : modules) {
@@ -301,13 +351,16 @@ public class Drive extends UpstreamDrivebase<RobotState> {
         Superstate.getInstance().isCurrentWanted(RobotState.SHOOTING_AND_INTAKING)) {
       Rotation2d aimingAngle = Robot.ballisticsCalculator.getShootingRobotAngle();
 
-      double omega = _aimingPID.calculate(getRotation().getRadians(), aimingAngle.getRadians());
+      double omega = MathUtil.clamp(
+          _aimingPID.calculate(getRotation().getRadians(), aimingAngle.getRadians()),
+          -getMaxAngularSpeedRadPerSec(), getMaxAngularSpeedRadPerSec());
       speeds.omegaRadiansPerSecond = omega;
     }
 
     ChassisSpeeds discreteSpeeds = ChassisSpeeds.discretize(speeds, 0.02);
     SwerveModuleState[] setpointStates = kinematics.toSwerveModuleStates(discreteSpeeds);
-    SwerveDriveKinematics.desaturateWheelSpeeds(setpointStates, maxSpeedMetersPerSec);
+    // Use the getter so slow mode is respected here too.
+    SwerveDriveKinematics.desaturateWheelSpeeds(setpointStates, getMaxLinearSpeedMetersPerSec());
 
     Logger.recordOutput("SwerveStates/Setpoints", setpointStates);
     Logger.recordOutput("SwerveChassisSpeeds/Setpoints", discreteSpeeds);
@@ -408,22 +461,13 @@ public class Drive extends UpstreamDrivebase<RobotState> {
   }
 
   public double getMaxLinearSpeedMetersPerSec() {
-    return maxSpeedMetersPerSec;
+    return _slowModeActive ? slowMaxSpeedMeterPerSec : maxSpeedMetersPerSec;
   }
 
   public double getMaxAngularSpeedRadPerSec() {
-    return maxSpeedMetersPerSec / driveBaseRadius;
+    return getMaxLinearSpeedMetersPerSec() / driveBaseRadius;
   }
 
-  /**
-   * Converts joystick x/y axes into a unit-circle-clamped translation vector.
-   *
-   * Input shaping is intentionally NOT done here — KoiController handles that
-   * (cubic curve + deadband + slew rate limiting) before the value arrives.
-   * Squaring the magnitude here in addition to KoiController's cubic would
-   * produce a combined x^6 curve where nearly all input below 50% stick throw
-   * is thrown away.
-   */
   private static Translation2d getLinearVelocityFromJoysticks(double x, double y) {
     double linearMagnitude = Math.min(Math.hypot(-x, -y), 1.0);
     double angle = Math.atan2(y, x);

@@ -10,10 +10,11 @@ import edu.wpi.first.math.util.Units;
 
 public class DriveConstants {
         public static final double maxSpeedMetersPerSec = 4.8;
+        public static final double slowMaxSpeedMeterPerSec = 1.2;
         public static final double odometryFrequency = 100.0;
-        public static final double driveBaseRadius = Units.inchesToMeters(10.3);
-        public static final double trackWidth = Units.inchesToMeters(14.566);
-        public static final double wheelBase = Units.inchesToMeters(14.566);
+        public static final double driveBaseRadius = Units.inchesToMeters(16.97);
+        public static final double trackWidth = Units.inchesToMeters(24);
+        public static final double wheelBase = Units.inchesToMeters(24);
 
         public static final Translation2d[] moduleTranslations = new Translation2d[] {
                         new Translation2d(trackWidth / 2.0, wheelBase / 2.0),
@@ -50,7 +51,7 @@ public class DriveConstants {
                         // Front Right (Index 1)
                         new SwerveModuleConfig(5, 7, 6, Rotation2d.fromRotations(-0.182373), true, false, true),
                         // Back Left (Index 2)
-                        new SwerveModuleConfig(11, 13, 12, Rotation2d.fromRotations(0.461914), true, false, true),
+                        new SwerveModuleConfig(13, 11, 12, Rotation2d.fromRotations(0.461914), true, false, true),
                         // Back Right (Index 3)
                         new SwerveModuleConfig(8, 10, 9, Rotation2d.fromRotations(0.496582), true, false, true)
         };
@@ -59,7 +60,7 @@ public class DriveConstants {
                 return moduleConfigs[index];
         }
 
-        public static final int driveMotorCurrentLimit = 60;
+        public static final int driveMotorCurrentLimit = 40;
         public static final double wheelRadiusMeters = Units.inchesToMeters(2.0);
         public static final double driveMotorReduction = 6.75;
         public static final DCMotor driveGearbox = DCMotor.getNeoVortex(1);
@@ -67,10 +68,10 @@ public class DriveConstants {
         public static final double driveEncoderPositionFactor = 2 * Math.PI / driveMotorReduction;
         public static final double driveEncoderVelocityFactor = (2 * Math.PI) / 60.0 / driveMotorReduction;
 
-        public static final double driveKp = 0.007;
-        public static final double driveKd = 0.0001;
-        public static final double driveKs = 0.12;
-        public static final double driveKv = 0.115;
+        public static final double driveKp = 0.02;
+        public static final double driveKd = 0.002;
+        public static final double driveKs = 0.11;
+        public static final double driveKv = 0.125;
         public static final double driveSimP = 0.05;
         public static final double driveSimD = 0.0;
         public static final double driveSimKs = 0.0;
@@ -101,9 +102,11 @@ public class DriveConstants {
         public static final double kFalloffPercent = 0.075;
         public static final int kFalloffExponent = 10;
 
-        public static final double robotMassKg = 45;
-        public static final double robotMOI = 3.888;
-        public static final double wheelCOF = 1.2;
+        public static final double kTeleopSlewRateMetersPerSecSq = 10.0;
+
+        public static final double robotMassKg = 40;
+        public static final double robotMOI = 4.59;
+        public static final double wheelCOF = 0.8;
         public static final RobotConfig ppConfig = new RobotConfig(
                         robotMassKg,
                         robotMOI,
