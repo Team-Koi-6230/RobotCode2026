@@ -9,8 +9,8 @@
         "containers": [
           {
             "title": "FMSInfo",
-            "x": 1024.0,
-            "y": 512.0,
+            "x": 0.0,
+            "y": 640.0,
             "width": 512.0,
             "height": 128.0,
             "type": "FMSInfo",
@@ -21,9 +21,9 @@
           },
           {
             "title": "BatteryVoltage (Volts)",
-            "x": 640.0,
-            "y": 512.0,
-            "width": 384.0,
+            "x": 0.0,
+            "y": 384.0,
+            "width": 256.0,
             "height": 128.0,
             "type": "Voltage View",
             "properties": {
@@ -39,8 +39,8 @@
           },
           {
             "title": "Alliance",
-            "x": 1024.0,
-            "y": 640.0,
+            "x": 1408.0,
+            "y": 128.0,
             "width": 128.0,
             "height": 128.0,
             "type": "Boolean Box",
@@ -57,7 +57,7 @@
           {
             "title": "Is Our Shift ",
             "x": 1280.0,
-            "y": 640.0,
+            "y": 128.0,
             "width": 128.0,
             "height": 128.0,
             "type": "Single Color View",
@@ -85,8 +85,8 @@
           },
           {
             "title": "Did We Win Auto",
-            "x": 1152.0,
-            "y": 640.0,
+            "x": 512.0,
+            "y": 256.0,
             "width": 128.0,
             "height": 128.0,
             "type": "Single Color View",
@@ -114,8 +114,8 @@
           },
           {
             "title": "Shift ",
-            "x": 1408.0,
-            "y": 640.0,
+            "x": 1024.0,
+            "y": 0.0,
             "width": 256.0,
             "height": 128.0,
             "type": "Large Text Display",
@@ -127,10 +127,10 @@
           },
           {
             "title": "USB Camera 0",
-            "x": 0.0,
-            "y": 512.0,
-            "width": 640.0,
-            "height": 384.0,
+            "x": 768.0,
+            "y": 256.0,
+            "width": 256.0,
+            "height": 256.0,
             "type": "Camera Stream",
             "properties": {
               "topic": "/CameraPublisher/USB Camera 0",
@@ -139,24 +139,11 @@
             }
           },
           {
-            "title": "Auto Choices",
-            "x": 640.0,
-            "y": 640.0,
-            "width": 384.0,
-            "height": 128.0,
-            "type": "ComboBox Chooser",
-            "properties": {
-              "topic": "/SmartDashboard/Auto Choices",
-              "period": 0.06,
-              "sort_options": false
-            }
-          },
-          {
             "title": "Field",
-            "x": 640.0,
+            "x": 512.0,
             "y": 0.0,
-            "width": 896.0,
-            "height": 512.0,
+            "width": 512.0,
+            "height": 256.0,
             "type": "Field",
             "properties": {
               "topic": "/SmartDashboard/Field",
@@ -186,6 +173,120 @@
               "time_display_mode": "Minutes and Seconds",
               "red_start_time": 20,
               "yellow_start_time": 30
+            }
+          },
+          {
+            "title": "limelight-front",
+            "x": 0.0,
+            "y": 0.0,
+            "width": 512.0,
+            "height": 384.0,
+            "type": "Camera Stream",
+            "properties": {
+              "topic": "/CameraPublisher/limelight-front",
+              "period": 0.06,
+              "rotation_turns": 0
+            }
+          },
+          {
+            "title": "DS Timer",
+            "x": 1280.0,
+            "y": 256.0,
+            "width": 256.0,
+            "height": 256.0,
+            "type": "Match Time",
+            "properties": {
+              "topic": "/SmartDashboard/DS Timer",
+              "period": 0.06,
+              "data_type": "double",
+              "time_display_mode": "Minutes and Seconds",
+              "red_start_time": 20,
+              "yellow_start_time": 30
+            }
+          },
+          {
+            "title": "Time Left in Shift ",
+            "x": 1024.0,
+            "y": 128.0,
+            "width": 256.0,
+            "height": 256.0,
+            "type": "Match Time",
+            "properties": {
+              "topic": "/SmartDashboard/Shift/Time Left in Shift ",
+              "period": 0.06,
+              "data_type": "double",
+              "time_display_mode": "Minutes and Seconds",
+              "red_start_time": 20,
+              "yellow_start_time": 30
+            }
+          },
+          {
+            "title": "Long Pass",
+            "x": 512.0,
+            "y": 384.0,
+            "width": 256.0,
+            "height": 128.0,
+            "type": "Toggle Button",
+            "properties": {
+              "topic": "/SmartDashboard/Long Pass",
+              "period": 0.06,
+              "data_type": "boolean"
+            }
+          },
+          {
+            "title": "Long Pass",
+            "x": 640.0,
+            "y": 256.0,
+            "width": 128.0,
+            "height": 128.0,
+            "type": "Boolean Box",
+            "properties": {
+              "topic": "/SmartDashboard/Long Pass",
+              "period": 0.06,
+              "data_type": "boolean",
+              "true_color": 4283215696,
+              "false_color": 4294198070,
+              "true_icon": "None",
+              "false_icon": "None"
+            }
+          },
+          {
+            "title": "Auto Choices",
+            "x": 1280.0,
+            "y": 0.0,
+            "width": 256.0,
+            "height": 128.0,
+            "type": "ComboBox Chooser",
+            "properties": {
+              "topic": "/SmartDashboard/Auto Choices",
+              "period": 0.06,
+              "sort_options": false
+            }
+          },
+          {
+            "title": "_slowModeActive",
+            "x": 1024.0,
+            "y": 384.0,
+            "width": 128.0,
+            "height": 128.0,
+            "type": "Toggle Switch",
+            "properties": {
+              "topic": "/AdvantageKit/RealOutputs/Drive/_slowModeActive",
+              "period": 0.06,
+              "data_type": "boolean"
+            }
+          },
+          {
+            "title": "CurrentSuperstate",
+            "x": 256.0,
+            "y": 384.0,
+            "width": 256.0,
+            "height": 128.0,
+            "type": "Large Text Display",
+            "properties": {
+              "topic": "/AdvantageKit/RealOutputs/CurrentSuperstate",
+              "period": 0.06,
+              "data_type": "string"
             }
           }
         ]
