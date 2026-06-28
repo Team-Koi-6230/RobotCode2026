@@ -56,7 +56,11 @@ public class RobotContainer {
 
         public RobotContainer() {
                 NamedCommands.registerCommand("Shoot", Commands.run(() -> {
-
+                        if (superstate.isCurrent(RobotState.SHOOTING)) {
+                                superstate.setWantedSuperstate(RobotState.SHOOTING);
+                        } else {
+                                superstate.setWantedSuperstate(RobotState.PRESHOOTING);
+                        }
                 }, superstate));
                 NamedCommands.registerCommand("Intake", superstate.setWantedSuperstateCommand(RobotState.INTAKING));
                 NamedCommands.registerCommand("Idle", superstate.setWantedSuperstateCommand(RobotState.IDLE));
@@ -66,7 +70,7 @@ public class RobotContainer {
 
                 autoChooser.addOption("Attack Middle (right)", new PathPlannerAuto("attackMiddle", true));
 
-                autoChooser.addOption("Easy center",
+                autoChooser.addOption("Step back three from the center (backup)",
                                 Commands.runOnce(() -> {
                                         var isRedAlliance = DriverStation.getAlliance()
                                                         .orElse(Alliance.Blue) == Alliance.Red;
@@ -80,15 +84,15 @@ public class RobotContainer {
                                                                                 .withTimeout(1.5))
                                                 .andThen(() -> drive.runVelocity(new ChassisSpeeds(0, 0, 0)))
                                                 .andThen(
-                                                                Commands.either(
-                                                                                superstate.setWantedSuperstateCommand(
-                                                                                                RobotState.SHOOTING),
-                                                                                superstate.setWantedSuperstateCommand(
-                                                                                                RobotState.PRESHOOTING),
-                                                                                () -> superstate.isCurrent(
-                                                                                                RobotState.SHOOTING))
-                                                                                .repeatedly()
-                                                                                .withTimeout(4))
+                                                                Commands.run(() -> {
+                                                                        if (superstate.isCurrent(RobotState.SHOOTING)) {
+                                                                                superstate.setWantedSuperstate(
+                                                                                                RobotState.SHOOTING);
+                                                                        } else {
+                                                                                superstate.setWantedSuperstate(
+                                                                                                RobotState.PRESHOOTING);
+                                                                        }
+                                                                }, superstate))
                                                 .andThen(superstate.setWantedSuperstateCommand(RobotState.IDLE)));
 
                 autoChooser.addDefaultOption("resetOdometry", Commands.runOnce(
