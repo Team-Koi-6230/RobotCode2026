@@ -19,6 +19,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.intake.Intake;
+import frc.robot.subsystems.led.LED;
 import frc.robot.subsystems.shooter.Shooter;
 import frc.robot.subsystems.vision.Vision;
 import team6230.koiupstream.superstates.Superstate;
@@ -50,6 +51,8 @@ public class RobotContainer {
         private Shooter shooter = new Shooter();
         @SuppressWarnings("unused")
         private Vision vision = new Vision();
+        @SuppressWarnings("unused")
+        private LED led = new LED();
 
         public RobotContainer() {
                 NamedCommands.registerCommand("Shoot", Commands.run(() -> {
@@ -62,6 +65,31 @@ public class RobotContainer {
                                 AutoBuilder.buildAutoChooser());
 
                 autoChooser.addOption("Attack Middle (right)", new PathPlannerAuto("attackMiddle", true));
+
+                autoChooser.addOption("Easy center",
+                                Commands.runOnce(() -> {
+                                        var isRedAlliance = DriverStation.getAlliance()
+                                                        .orElse(Alliance.Blue) == Alliance.Red;
+                                        drive.setPose(new Pose2d(
+                                                        drive.getPose().getTranslation(),
+                                                        new Rotation2d(isRedAlliance ? Math.PI : 0)));
+                                }, drive)
+                                                .andThen(
+                                                                Commands.run(() -> drive.runVelocity(
+                                                                                new ChassisSpeeds(-1.0, 0, 0)), drive)
+                                                                                .withTimeout(1.5))
+                                                .andThen(() -> drive.runVelocity(new ChassisSpeeds(0, 0, 0)))
+                                                .andThen(
+                                                                Commands.either(
+                                                                                superstate.setWantedSuperstateCommand(
+                                                                                                RobotState.SHOOTING),
+                                                                                superstate.setWantedSuperstateCommand(
+                                                                                                RobotState.PRESHOOTING),
+                                                                                () -> superstate.isCurrent(
+                                                                                                RobotState.SHOOTING))
+                                                                                .repeatedly()
+                                                                                .withTimeout(4))
+                                                .andThen(superstate.setWantedSuperstateCommand(RobotState.IDLE)));
 
                 autoChooser.addDefaultOption("resetOdometry", Commands.runOnce(
                                 () -> {
@@ -77,8 +105,6 @@ public class RobotContainer {
         }
 
         private void configureBindings() {
-                // superstate.setDefaultWantedState(RobotState.IDLE);
-
                 IntakeButton
                                 .and(PreparingShooterButton.negate()).and(ShootingButton.negate())
                                 .whileTrue(superstate.setWantedSuperstateCommand(RobotState.INTAKING));
@@ -101,21 +127,6 @@ public class RobotContainer {
                                 .and(IntakeButton.negate())
                                 .and(() -> superstate.isCurrent(RobotState.SHOOTING))
                                 .whileTrue(superstate.setWantedSuperstateCommand(RobotState.SHOOTING));
-
-                /*
-                 * ShootingButton
-                 * .and(IntakeButton.negate())
-                 * .and(this::isUnpreparedToShoot)
-                 * .and(() -> !isShooting)
-                 * .whileTrue(superstate.setWantedSuperstateCommand(RobotState.PREPARING_SHOOTER
-                 * ));
-                 * 
-                 * ShootingButton
-                 * .and(IntakeButton)
-                 * .and(this::isUnpreparedToShoot)
-                 * .whileTrue(superstate
-                 * .setWantedSuperstateCommand(RobotState.PREPARING_SHOOTER_AND_INTAKING));
-                 */
 
                 UnjamButton
                                 .whileTrue(superstate.setWantedSuperstateCommand(RobotState.UNJAM));
