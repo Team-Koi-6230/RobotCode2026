@@ -132,7 +132,7 @@ public class RobotContainer {
                 HomeButton
                                 .whileTrue(superstate.setWantedSuperstateCommand(RobotState.HOME));
 
-                driverController.povDown().whileTrue(Commands.runOnce(() -> resetGyro()));
+                driverController.povDown().whileTrue(Commands.runOnce(() -> resetGyro(), drive));
 
                 driverController.leftBumper().onTrue(Commands.runOnce(() -> {
                         drive.toggleShouldRoundOrientation();
@@ -140,8 +140,10 @@ public class RobotContainer {
 
                 driverController.y().onTrue(Commands.runOnce(() -> activateDefensiveSwerve()));
 
-                op.a().whileTrue(intake.intakeManual());
-                op.b().whileTrue(intake.cancel());
+                /*
+                 * op.a().whileTrue(intake.intakeManual());
+                 * op.b().whileTrue(intake.cancel());
+                 */
         }
 
         public Command getAutonomousCommand() {

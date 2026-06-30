@@ -58,4 +58,14 @@ public class IntakeConstants {
     public static final double kAsim = 0.001;
     public static final double kMaxVelocityRadPerSec = 16 * Math.PI;
     public static final double kMaxAccelRadPerSecSquared = 120 * Math.PI;
+
+    // new comp stuff for new controls system
+    public static final double kPivotDriveVolts = 3.0;
+    public static final double kPivotOpenVolts = -kPivotDriveVolts;
+    public static final double kPivotClosedVolts = kPivotDriveVolts;
+
+    public static final double kStallCurrentRatio = 0.85;
+    public static final double kStallVoltageRatio = 0.3;
+    public static final double kStallDebounceSec = 0.2;
+    public static final double kRollerStartStallDebounceSec = 0.1;
 }

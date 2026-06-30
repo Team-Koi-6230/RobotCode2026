@@ -1,10 +1,10 @@
 package frc.robot.subsystems.intake;
 
+import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants;
-import frc.robot.Robot;
 import frc.robot.RobotMap;
 import frc.robot.RobotState;
 import frc.robot.subsystems.intake.io.IntakeIO;
@@ -27,46 +27,47 @@ public class Intake extends UpstreamSubsystem<RobotState, IntakeIO, IntakeIOInpu
     private final RollerIO roller;
     private final RollerIOInputsAutoLogged rollerInputs;
 
-    private int step = 1;
-    private boolean isShooting = false;
+    /**
+     * Which hard stop the pivot is currently being driven toward while SHOOTING.
+     */
+    private enum OscillationTarget {
+        OPEN, CLOSED
+    }
 
+    private OscillationTarget oscillationTarget = OscillationTarget.OPEN;
     private double oscillationStartTime = -1;
+
+    // Reset (not just .calculate(false)'d) on every new pivot target so a fresh
+    // kStallDebounceSec window is required before "stalled" can fire again. This is
+    // used for
+    // arrival detection only (INTAKING/HOME) - the SHOOTING oscillation uses a
+    // fixed timing
+    // interval instead, since agitating the fuel benefits from a quick, predictable
+    // shake
+    // rather than waiting for a hard-stop stall on every swing.
+    private Debouncer pivotStallDebouncer = newStallDebouncer();
+
+    // Separate, shorter-debounced check for starting the roller during intaking.
+    // Kept distinct
+    // from pivotStallDebouncer so roller-start can be tuned fast without loosening
+    // the
+    // isReady() arrival signal that other subsystems gate on.
+    private Debouncer rollerStartStallDebouncer = newRollerStartStallDebouncer();
+
+    private static Debouncer newStallDebouncer() {
+        return new Debouncer(IntakeConstants.kStallDebounceSec, Debouncer.DebounceType.kRising);
+    }
+
+    private static Debouncer newRollerStartStallDebouncer() {
+        return new Debouncer(IntakeConstants.kRollerStartStallDebounceSec, Debouncer.DebounceType.kRising);
+    }
 
     // #region tunables
     @Tunable
-    private double tunablePivotSetpoint = IntakeConstants.kMinAngle.getDegrees();
+    private double tunablePivotVolts = 0;
 
     @Tunable
     private double tunableRollerVolts = 0;
-
-    @Tunable
-    private double kP = Robot.isReal() ? IntakeConstants.kP : IntakeConstants.kPsim;
-
-    @Tunable
-    private double kI = Robot.isReal() ? IntakeConstants.kI : IntakeConstants.kIsim;
-
-    @Tunable
-    private double kD = Robot.isReal() ? IntakeConstants.kD : IntakeConstants.kDsim;
-
-    @Tunable
-    private double kS = Robot.isReal() ? IntakeConstants.kS : IntakeConstants.kSsim;
-
-    @Tunable
-    private double kG = Robot.isReal() ? IntakeConstants.kG : IntakeConstants.kGsim;
-
-    @Tunable
-    private double kV = Robot.isReal() ? IntakeConstants.kV : IntakeConstants.kVsim;
-
-    @Tunable
-    private double kA = Robot.isReal() ? IntakeConstants.kA : IntakeConstants.kAsim;
-
-    @Tunable
-    private double kMaxVelocityRadPerSec = Robot.isReal() ? IntakeConstants.kCruiseVelocity
-            : IntakeConstants.kMaxVelocityRadPerSec;
-
-    @Tunable
-    private double kMaxAccelRadPerSecSquared = Robot.isReal() ? IntakeConstants.kMaxAcceleration
-            : IntakeConstants.kMaxAccelRadPerSecSquared;
     // #endregion
 
     public Intake() {
@@ -94,12 +95,10 @@ public class Intake extends UpstreamSubsystem<RobotState, IntakeIO, IntakeIOInpu
         addSuperstateBehaviour(RobotState.IDLE, () -> {
             clearConditionalActions();
             roller.runVoltage(0);
-            isShooting = false;
         });
         addSuperstateBehaviour(RobotState.PREPARING_SHOOTER, () -> {
             clearConditionalActions();
             roller.runVoltage(0);
-            isShooting = false;
         });
         addSuperstateBehaviour(RobotState.SHOOTING, () -> {
             roller.runVoltage(IntakeConstants.kShootingVolts);
@@ -109,95 +108,92 @@ public class Intake extends UpstreamSubsystem<RobotState, IntakeIO, IntakeIOInpu
         addSuperstateBehaviour(RobotState.HOME, () -> home());
     }
 
+    /**
+     * Voltage/current-based replacement for position-tolerance arrival checking.
+     * The pivot's
+     * meaningful setpoints (open/closed) are mechanical hard stops, so "arrived" is
+     * read as
+     * "commanding real voltage but current is pinned near the smart current limit,
+     * for a
+     * sustained period" rather than from any encoder position.
+     */
+    private boolean isPivotStalled(Debouncer debouncer) {
+        double currentRatio = Math.abs(inputs.pivotCurrent[0]) / IntakeConstants.kPivotCurrentLimits;
+        double voltageRatio = Math.abs(inputs.pivotAppliedVoltage) / IntakeConstants.kPivotDriveVolts;
+        boolean raw = currentRatio >= IntakeConstants.kStallCurrentRatio
+                && voltageRatio >= IntakeConstants.kStallVoltageRatio;
+        return debouncer.calculate(raw);
+    }
+
     private void home() {
         clearConditionalActions();
-        io.setTargetAngle(IntakeConstants.kClosedAngle);
+        io.runVoltsPivot(IntakeConstants.kPivotClosedVolts);
         roller.runVoltage(0);
-        isShooting = false;
+        pivotStallDebouncer = newStallDebouncer();
     }
 
     private void intaking() {
         clearConditionalActions();
-        io.setTargetAngle(IntakeConstants.kOpenAngle);
+        io.runVoltsPivot(IntakeConstants.kPivotOpenVolts);
+        pivotStallDebouncer = newStallDebouncer();
+        rollerStartStallDebouncer = newRollerStartStallDebouncer();
+        roller.runVoltage(0);
+
         registerConditionalAction(new ConditionalAction(
-                () -> inputs.relativePivotAngleDeg < IntakeConstants.kMinOpenAngle.getDegrees(),
+                () -> isPivotStalled(rollerStartStallDebouncer),
                 () -> roller.runVoltage(IntakeConstants.kIntakingVolts)));
-        isShooting = false;
     }
 
     private void openArm() {
         clearConditionalActions();
-        io.setTargetAngle(IntakeConstants.kOpenAngle);
+        io.runVoltsPivot(IntakeConstants.kPivotOpenVolts);
         roller.runVoltage(0);
     }
 
-    private void shooting() {
-        if (isShooting)
-            return;
-        clearConditionalActions();
-        io.setTargetAngle(IntakeConstants.kOpenAngle);
-        isShooting = true;
-        step = 1;
-
-        registerConditionalAction(new ConditionalAction(
-                this::shouldAdvanceIndexCycle,
-                this::advanceIndexCycle));
-    }
-
+    /**
+     * Drives the pivot back and forth between the open and closed hard stops while
+     * SHOOTING,
+     * flipping on a fixed timing interval (kOscillationIntervalSecs) rather than
+     * waiting for a
+     * stall - a quick predictable shake agitates the fuel better than a full
+     * hard-stop swing.
+     *
+     * Deliberately NOT using ConditionalAction here - re-arming it on every flip
+     * still stopped
+     * toggling after the first cycle. Instead this just records a start time once,
+     * and update()
+     * recomputes which side we should be on from elapsed wall-clock time every
+     * loop, with no
+     * registered event to lose track of.
+     */
     private void oscillating() {
         clearConditionalActions();
+        oscillationTarget = OscillationTarget.OPEN;
+        io.runVoltsPivot(IntakeConstants.kPivotOpenVolts);
         oscillationStartTime = Timer.getFPGATimestamp();
-
-        registerConditionalAction(new ConditionalAction(
-                () -> {
-                    double elapsed = Timer.getFPGATimestamp() - oscillationStartTime;
-                    long cycleIndex = (long) (elapsed / IntakeConstants.kOscillationIntervalSecs);
-                    return cycleIndex % 2 != 0;
-                },
-                () -> {
-                    io.setTargetAngle(IntakeConstants.kClosedAngle);
-                    oscillationStartTime = Timer.getFPGATimestamp();
-                }));
     }
 
-    private boolean shouldAdvanceIndexCycle() {
-        return inputs.relativePivotAngleDeg < IntakeConstants.kMinOpenAngle.getDegrees();
-    }
+    private void updateOscillation() {
+        double elapsed = Timer.getFPGATimestamp() - oscillationStartTime;
+        long cycleIndex = (long) (elapsed / IntakeConstants.kOscillationIntervalSecs);
+        OscillationTarget desired = (cycleIndex % 2 == 0) ? OscillationTarget.OPEN : OscillationTarget.CLOSED;
 
-    private void advanceIndexCycle() {
-        roller.runVoltage(IntakeConstants.kShootingVolts);
-
-        double angleDeg = IntakeConstants.kMinAngle.getDegrees() + (step * IntakeConstants.kStepSizeDegrees);
-
-        if (angleDeg > IntakeConstants.kMaxAngle.getDegrees()) {
-            step = 1;
-            io.setTargetAngle(IntakeConstants.kOpenAngle);
-            return;
+        if (desired != oscillationTarget) {
+            oscillationTarget = desired;
+            io.runVoltsPivot(desired == OscillationTarget.OPEN
+                    ? IntakeConstants.kPivotOpenVolts
+                    : IntakeConstants.kPivotClosedVolts);
         }
-
-        if (inputs.relativePivotAngleDeg <= inputs.pivotTargetAngle - 3) {
-            return;
-        }
-
-        step++;
-        io.setTargetAngle(Rotation2d.fromDegrees(angleDeg));
     }
 
     @Override
     public void update() {
         if (Superstate.getInstance().isCurrentWanted(RobotState.SHOOTING)) {
-            double elapsed = Timer.getFPGATimestamp() - oscillationStartTime;
-            long cycleIndex = (long) (elapsed / IntakeConstants.kOscillationIntervalSecs);
-            if (cycleIndex % 2 == 0) {
-                io.setTargetAngle(IntakeConstants.kOpenAngle);
-            } else {
-                io.setTargetAngle(IntakeConstants.kClosedAngle);
-            }
+            updateOscillation();
         }
 
         if (TunableManager.checkChanged(this)) {
-            io.setPIDF(kP, kI, kD, kS, kG, kV, kA, kMaxVelocityRadPerSec, kMaxAccelRadPerSecSquared);
-            io.setTargetAngle(Rotation2d.fromDegrees(tunablePivotSetpoint));
+            io.runVoltsPivot(tunablePivotVolts);
             roller.runVoltage(tunableRollerVolts);
         }
     }
@@ -206,8 +202,7 @@ public class Intake extends UpstreamSubsystem<RobotState, IntakeIO, IntakeIOInpu
     public boolean isReady() {
         if (Superstate.getInstance().isCurrentWanted(RobotState.INTAKING)
                 || Superstate.getInstance().isCurrentWanted(RobotState.HOME))
-            return Math.abs(inputs.pivotTargetAngle
-                    - inputs.relativePivotAngleDeg) <= IntakeConstants.kErrorToleranceDeg;
+            return isPivotStalled(pivotStallDebouncer);
         return true;
     }
 
