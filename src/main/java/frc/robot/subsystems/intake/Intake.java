@@ -2,6 +2,7 @@ package frc.robot.subsystems.intake;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants;
 import frc.robot.Robot;
 import frc.robot.RobotMap;
@@ -237,5 +238,19 @@ public class Intake extends UpstreamSubsystem<RobotState, IntakeIO, IntakeIOInpu
 
     public void stopMotor() {
         io.stop();
+    }
+
+    public Command intakeManual() {
+        return run(() -> {
+            setVoltage(-3);
+            roller.runVoltage(0/* IntakeConstants.kIntakingVolts */);
+        });
+    }
+
+    public Command cancel() {
+        return run(() -> {
+            setVoltage(3);
+            roller.runVoltage(0);
+        });
     }
 }

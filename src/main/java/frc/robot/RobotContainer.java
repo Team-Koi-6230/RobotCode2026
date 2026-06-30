@@ -16,6 +16,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.intake.Intake;
@@ -30,7 +31,7 @@ public class RobotContainer {
 
         private Superstate superstate = Superstate.getInstance();
         private static KoiController driverController = new KoiController(0, 0.15, 8, 5);
-
+        private CommandXboxController op = new CommandXboxController(1);
         private final LoggedDashboardChooser<Command> autoChooser;
 
         private Trigger IntakeButton = driverController.leftTrigger();
@@ -65,18 +66,14 @@ public class RobotContainer {
                 NamedCommands.registerCommand("Intake", superstate.setWantedSuperstateCommand(RobotState.INTAKING));
                 NamedCommands.registerCommand("Idle", superstate.setWantedSuperstateCommand(RobotState.IDLE));
 
-                autoChooser = new LoggedDashboardChooser<>("Auto Choices",
-                                AutoBuilder.buildAutoChooser());
+                autoChooser = new LoggedDashboardChooser<>("Auto Chooser", AutoBuilder.buildAutoChooser());
 
-                autoChooser.addOption("Attack Middle (right)", new PathPlannerAuto("attackMiddle", true));
+                autoChooser.addOption("safe middle attack like bron (right)",
+                                new PathPlannerAuto("safe middle attack like bron", true));
 
                 autoChooser.addOption("Step back three from the center (backup)",
                                 Commands.runOnce(() -> {
-                                        var isRedAlliance = DriverStation.getAlliance()
-                                                        .orElse(Alliance.Blue) == Alliance.Red;
-                                        drive.setPose(new Pose2d(
-                                                        drive.getPose().getTranslation(),
-                                                        new Rotation2d(isRedAlliance ? Math.PI : 0)));
+                                        resetGyro();
                                 }, drive)
                                                 .andThen(
                                                                 Commands.run(() -> drive.runVelocity(
@@ -97,11 +94,7 @@ public class RobotContainer {
 
                 autoChooser.addDefaultOption("resetOdometry", Commands.runOnce(
                                 () -> {
-                                        var isRedAlliance = DriverStation.getAlliance()
-                                                        .orElse(Alliance.Blue) == Alliance.Red;
-                                        drive.setPose(
-                                                        new Pose2d(drive.getPose().getTranslation(),
-                                                                        new Rotation2d(isRedAlliance ? Math.PI : 0)));
+                                        resetGyro();
                                 },
                                 drive));
 
@@ -130,6 +123,7 @@ public class RobotContainer {
                 ShootingButton
                                 .and(IntakeButton.negate())
                                 .and(() -> superstate.isCurrent(RobotState.SHOOTING))
+
                                 .whileTrue(superstate.setWantedSuperstateCommand(RobotState.SHOOTING));
 
                 UnjamButton
@@ -138,13 +132,16 @@ public class RobotContainer {
                 HomeButton
                                 .whileTrue(superstate.setWantedSuperstateCommand(RobotState.HOME));
 
-                driverController.povDown().whileTrue(shooter.shoot_hard());
+                driverController.povDown().whileTrue(Commands.runOnce(() -> resetGyro()));
 
                 driverController.leftBumper().onTrue(Commands.runOnce(() -> {
                         drive.toggleShouldRoundOrientation();
                 }));
 
                 driverController.y().onTrue(Commands.runOnce(() -> activateDefensiveSwerve()));
+
+                op.a().whileTrue(intake.intakeManual());
+                op.b().whileTrue(intake.cancel());
         }
 
         public Command getAutonomousCommand() {
@@ -170,5 +167,13 @@ public class RobotContainer {
         public static void addVisionMeasurement(Pose2d visionRobotPoseMeters, double timestampSeconds,
                         Matrix<N3, N1> visionMeasurementStdDevs) {
                 drive.addVisionMeasurement(visionRobotPoseMeters, timestampSeconds, visionMeasurementStdDevs);
+        }
+
+        public static void resetGyro() {
+                var isRedAlliance = DriverStation.getAlliance()
+                                .orElse(Alliance.Blue) == Alliance.Red;
+                drive.setPose(
+                                new Pose2d(drive.getPose().getTranslation(),
+                                                new Rotation2d(isRedAlliance ? Math.PI : 0)));
         }
 }

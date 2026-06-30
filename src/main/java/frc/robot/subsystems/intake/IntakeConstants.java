@@ -7,15 +7,16 @@ public class IntakeConstants {
     public static final double kRollerGearRatio = 4;
     public static final double kPivotMotorToShaftGearRatio = 25;
     public static final double kPivotMotorToPivotGearRatio = 75;
-    public static final double kPivotShaftToPivotGearRatio = kPivotMotorToPivotGearRatio / kPivotMotorToShaftGearRatio;
+    public static final double kPivotShaftToPivotGearRatio = kPivotMotorToPivotGearRatio /
+            kPivotMotorToShaftGearRatio;
 
-    public static final int kPivotCurrentLimits = 40;
+    public static final int kPivotCurrentLimits = 10;
     public static final int kRollerCurrentLimits = 40;
-    public static final int kIntakingVolts = 9;
+    public static final int kIntakingVolts = 12;
     public static final int kShootingVolts = 6;
     public static final boolean kMotorInverted = true;
 
-    public static final Rotation2d kThroughBoreOffset = Rotation2d.fromDegrees(-29);
+    public static final Rotation2d kThroughBoreOffset = Rotation2d.fromDegrees(-328);
     public static final boolean kEncoderInverted = kMotorInverted;
 
     public static final double kForwardSoftLimit = 101;
@@ -44,8 +45,8 @@ public class IntakeConstants {
     public static final double kA = 0;
     public static final double kG = 0.2;
     public static final double kCosRatio = 1;
-    public static final double kMaxAcceleration = 36000;
-    public static final double kCruiseVelocity = 400000;
+    public static final double kMaxAcceleration = 12000;
+    public static final double kCruiseVelocity = 200000;
     public static final double kTolerance = 2;
 
     public static final double kPsim = 6;

@@ -218,9 +218,9 @@ public class ShiftUtil {
 				allianceWinOverrideKey, getAllianceWinOverride().orElse(false));
 		Color winningAllianceColor = switch (getFirstActiveAlliance()) {
 			case Blue:
-				yield Constants.isRedAlliance ? Color.kLimeGreen : Color.kPurple;
+				yield Constants.isRedAlliance ? Color.kRed : Color.kGreen;
 			case Red:
-				yield Constants.isRedAlliance ? Color.kRed : Color.kLimeGreen;
+				yield Constants.isRedAlliance ? Color.kGreen : Color.kRed;
 			default:
 				yield Color.kGray;
 		};

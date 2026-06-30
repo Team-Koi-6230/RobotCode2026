@@ -104,8 +104,8 @@ public class DriveConstants {
 
         public static final double kTeleopSlewRateMetersPerSecSq = 10.0;
 
-        public static final double robotMassKg = 40;
-        public static final double robotMOI = 4.59;
+        public static final double robotMassKg = 49.44;
+        public static final double robotMOI = 4.568;
         public static final double wheelCOF = 0.8;
         public static final RobotConfig ppConfig = new RobotConfig(
                         robotMassKg,

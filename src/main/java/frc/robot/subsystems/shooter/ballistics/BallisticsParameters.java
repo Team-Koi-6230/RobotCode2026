@@ -9,9 +9,9 @@ public class BallisticsParameters {
 
     public static final double kMaxSpeed = 32.725;
 
-    public static final double kPassingSpeed = 18;
+    public static final double kPassingSpeed = 20;
     public static final double kPassingAngle = 140;
-    public static final double kLongPassingSpeed = 25;
+    public static final double kLongPassingSpeed = 27;
     public static final double kLongPassingAngle = 120;
 
     public static final double kFlywheelDiameter = 0.1;
@@ -36,14 +36,14 @@ public class BallisticsParameters {
 
         fillMap(kShotFlywheelSpeedMap,
                 new double[] { 1.6, 2.6, 3.6 },
-                new double[] { 15, 15, 16.05 });
+                new double[] { 15.25, 17.25, 17 });
 
         fillMap(kTimeOfFlightMap,
                 new double[] { 1.6, 2.6, 3.6 },
                 new double[] { 0.3, 0.57, 0.7 });
     }
 
-    public static final double kMaxShootingDist = 2.2;
+    public static final double kMaxShootingDist = 3.6;
 
     public static final double kRightLaneMultiplier = 1;
     public static final double kLeftLaneMultiplier = 3;
